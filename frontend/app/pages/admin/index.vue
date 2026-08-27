@@ -1,0 +1,1 @@
+<script setup lang="ts">definePageMeta({ middleware: 'admin' })</script><template><div class="grid"><AdminSidebar /><section class="stack"><h1>Admin overview</h1><p class="muted">Manage the restaurant from one place.</p></section></div></template>

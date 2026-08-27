@@ -1,0 +1,1 @@
+<script setup lang="ts">definePageMeta({ middleware: 'auth' }); const { user } = useAuth()</script><template><section class="stack"><h1>Profile</h1><div class="panel stack"><strong>{{ user?.full_name }}</strong><span>{{ user?.email }}</span><span class="muted">@{{ user?.username }}</span></div></section></template>

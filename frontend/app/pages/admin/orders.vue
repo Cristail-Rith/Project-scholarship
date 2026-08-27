@@ -1,0 +1,1 @@
+<script setup lang="ts">definePageMeta({ middleware: 'admin' })</script><template><div class="grid"><AdminSidebar /><section class="stack"><h1>Orders</h1><p class="muted">Track incoming and completed orders.</p></section></div></template>

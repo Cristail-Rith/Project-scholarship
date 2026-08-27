@@ -1,0 +1,1 @@
+<template><aside class="panel stack"><strong>Admin workspace</strong><NuxtLink to="/admin">Overview</NuxtLink><NuxtLink to="/admin/users">Users</NuxtLink><NuxtLink to="/admin/products">Products</NuxtLink><NuxtLink to="/admin/categories">Categories</NuxtLink><NuxtLink to="/admin/tables">Tables</NuxtLink><NuxtLink to="/admin/orders">Orders</NuxtLink></aside></template>

@@ -1,0 +1,1 @@
+<template><section class="stack"><p class="muted">Welcome to</p><h1>Table & Thyme</h1><p>Seasonal plates, warm service, and a table waiting for you.</p><div><NuxtLink class="btn" to="/menu">Explore the menu</NuxtLink></div></section></template>

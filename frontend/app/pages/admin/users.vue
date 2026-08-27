@@ -1,0 +1,1 @@
+<script setup lang="ts">definePageMeta({ middleware: 'admin' })</script><template><div class="grid"><AdminSidebar /><section class="stack"><h1>Users</h1><p class="muted">Review registered customers and staff accounts.</p></section></div></template>
