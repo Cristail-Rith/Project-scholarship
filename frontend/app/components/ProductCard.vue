@@ -1,2 +1,0 @@
-<script setup lang="ts">defineProps<{ product: { name: string; price: number; category_name?: string; is_available?: boolean } }>()</script>
-<template><article class="panel stack"><div><strong>{{ product.name }}</strong><p class="muted">{{ product.category_name || 'Menu item' }}</p></div><span>${{ product.price.toFixed(2) }}</span><small>{{ product.is_available === false ? 'Unavailable' : 'Available' }}</small></article></template>

@@ -1,1 +1,0 @@
-<script setup lang="ts">definePageMeta({ middleware: 'admin' })</script><template><div class="grid"><AdminSidebar /><section class="stack"><h1>Tables</h1><p class="muted">Monitor table capacity and availability.</p></section></div></template>

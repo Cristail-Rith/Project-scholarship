@@ -1,1 +1,6 @@
-<script setup lang="ts">definePageMeta({ middleware: 'auth' })</script><template><section class="stack"><h1>Your orders</h1><p class="muted">Your recent orders will appear here.</p></section></template>
+<template>
+    <Navbar/>
+    <div>
+        hello world
+    </div>
+</template>

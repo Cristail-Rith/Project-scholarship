@@ -1,1 +1,0 @@
-<script setup lang="ts">definePageMeta({ middleware: 'admin' })</script><template><div class="grid"><AdminSidebar /><section class="stack"><h1>Products</h1><p class="muted">Create and update menu items.</p></section></div></template>
