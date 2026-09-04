@@ -1,85 +1,9 @@
 <template>
   <Navbar/>
+  <Caroursel/>
   <div class="min-h-screen bg-[#FDFBF7] text-neutral-800 font-serif">
     <!-- HERO SECTION -->
-    <section class="relative overflow-hidden pt-8 pb-16 md:py-20 lg:py-24 px-6 md:px-12 max-w-7xl mx-auto">
-      <!-- Decorative Background Watercolor Leaf Element -->
-      <div class="absolute -bottom-10 left-1/3 w-64 h-64 bg-[radial-gradient(circle,_rgba(224,204,170,0.15)_0%,_transparent_70%)] pointer-events-none rounded-full blur-2xl"></div>
-      
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-        <!-- Hero Text Content (Left) -->
-        <div class="lg:col-span-6 space-y-6 z-10">
-          <div class="inline-block">
-            <span class="text-xs font-sans tracking-[0.3em] font-semibold text-[#B38B4D] uppercase flex items-center gap-2">
-              <span class="w-2 h-[1px] bg-[#B38B4D]"></span>
-              Experience Fine Dining
-            </span>
-          </div>
-
-          <h1 class="text-4xl sm:text-5xl xl:text-6xl font-serif text-neutral-900 leading-[1.15] font-normal tracking-wide">
-            Delicious Food, <br />
-            Unforgettable <span class="italic text-[#C59B27] font-serif">Moments</span>
-          </h1>
-
-          <p class="font-sans text-stone-600 text-sm md:text-base leading-relaxed max-w-md font-light">
-            A perfect blend of taste, art, and ambiance. <br class="hidden sm:inline" />
-            Crafted to delight your senses.
-          </p>
-
-          <!-- Action Buttons -->
-          <div class="flex flex-wrap items-center gap-4 pt-2 font-sans">
-            <NuxtLink
-              to="/reservation"
-              class="px-8 py-3.5 bg-[#C59237] hover:bg-[#b0802c] text-white text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md hover:shadow-lg rounded-sm"
-            >
-              Book A Table
-            </NuxtLink>
-
-            <NuxtLink
-              to="/menu"
-              class="px-8 py-3.5 border border-stone-800 hover:bg-stone-900 hover:text-white text-stone-800 text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 rounded-sm"
-            >
-              Explore Menu
-            </NuxtLink>
-          </div>
-
-          <!-- Carousel Indicators -->
-          <div class="flex items-center gap-2 pt-6">
-            <button
-              v-for="(slide, index) in 3"
-              :key="index"
-              @click="activeSlide = index"
-              :class="[
-                'h-2.5 rounded-full transition-all duration-300',
-                activeSlide === index ? 'w-8 bg-[#C59237]' : 'w-2.5 bg-stone-300 hover:bg-stone-400'
-              ]"
-              :aria-label="`Slide ${index + 1}`"
-            ></button>
-          </div>
-        </div>
-
-        <!-- Hero Plate Image (Right) -->
-        <div class="lg:col-span-6 relative flex justify-center items-center">
-          <!-- Soft Background Glow -->
-          <div class="absolute w-[80%] h-[80%] bg-gradient-to-tr from-[#f5ebd7] to-[#e8d2b0] rounded-full blur-3xl opacity-50 -z-10"></div>
-          
-          <div class="relative group">
-            <img
-              src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80"
-              alt="Gourmet Fine Dining Dish"
-              class="w-full max-w-lg lg:max-w-xl object-contain drop-shadow-2xl transition-transform duration-700 hover:scale-[1.02]"
-            />
-
-            <!-- Subtle Decorative Botanical SVG Floating Accent -->
-            <div class="absolute -bottom-6 -left-6 w-24 h-24 opacity-30 pointer-events-none">
-              <svg viewBox="0 0 100 100" fill="#4A5D4E">
-                <path d="M50 10C30 30 10 50 10 80c20 0 40-20 60-40 10-10 10-20 0-30z"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    
 
     <!-- OUR MENU CATEGORIES SECTION -->
     <section class="py-16 bg-[#FAF7F2] border-t border-b border-stone-200/50">
@@ -198,6 +122,7 @@
       </div>
     </section>
   </div>
+  <Footer/>
 </template>
 
 <script setup>
