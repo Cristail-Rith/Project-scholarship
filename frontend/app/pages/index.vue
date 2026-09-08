@@ -127,11 +127,13 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useProducts } from '~/composables/useProducts'
+
+const { products } = useProducts()
 
 const activeSlide = ref(0)
 const selectedTab = ref('All Items')
 
-// Category Circle Data
 const categories = [
   {
     name: 'Starters',
@@ -163,39 +165,11 @@ const categories = [
 const filterTabs = ['All Items', 'Starters', 'Main Course', 'Desserts', 'Beverages']
 
 // Recommendation Items
-const items = [
-  {
-    id: 1,
-    title: 'Pan-Seared Duck Breast',
-    category: 'Main Course',
-    price: 34.00,
-    rating: '4.9',
-    description: 'Served with cherry reduction sauce, truffle potato puree, and heirloom vegetables.',
-    image: 'https://images.unsplash.com/photo-1514944288352-fffac99f0bdf?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 2,
-    title: 'Truffle Mushroom Risotto',
-    category: 'Starters',
-    price: 22.50,
-    rating: '4.8',
-    description: 'Arborio rice infused with wild forest mushrooms, aged parmesan, and black truffle oil.',
-    image: 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 3,
-    title: 'Valrhona Chocolate Lava',
-    category: 'Desserts',
-    price: 16.00,
-    rating: '5.0',
-    description: 'Warm molten chocolate cake served with Madagascar vanilla bean gelée & berry coulis.',
-    image: 'https://images.unsplash.com/photo-1604908177520-1f3e5b8c9f2d?auto=format&fit=crop&w=600&q=80'
-  }
-]
+const items = products
 
 const filteredItems = computed(() => {
-  if (selectedTab.value === 'All Items') return items
-  return items.filter(item => item.category === selectedTab.value)
+  if (selectedTab.value === 'All Items') return items.value
+  return items.value.filter(item => item.category === selectedTab.value)
 })
 
 const addToCart = (item) => {

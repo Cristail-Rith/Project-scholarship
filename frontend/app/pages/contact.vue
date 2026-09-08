@@ -72,7 +72,7 @@
          NAVIGATION
     ========================================================== -->
     <header
-      class="sticky top-0 z-50 bg-[#F8F5EF]/95 backdrop-blur-xl border-b border-[#29251F]/10"
+      class="sticky top-0 z-50 bg-[#F8F5EF]/95 backdrop-blur-xl py-5 border-b border-[#29251F]/10"
     >
       <nav class="max-w-[1400px] mx-auto px-6 lg:px-10 h-[82px] flex items-center justify-between">
         <!-- Mobile menu -->
@@ -93,7 +93,7 @@
 
         <!-- Left navigation -->
         <div
-          class="hidden lg:flex items-center gap-9 font-sans text-[10px] font-semibold tracking-[0.24em] text-[#514A42] uppercase"
+          class="hidden lg:flex items-center gap-9 font-sans text-[12px] font-semibold tracking-[0.24em] text-[#514A42] uppercase"
         >
           <NuxtLink to="/" class="nav-link">Home</NuxtLink>
           <NuxtLink to="/menu" class="nav-link">Menu</NuxtLink>
@@ -129,27 +129,13 @@
         <!-- Right navigation -->
         <div class="flex items-center gap-5 lg:gap-9 ml-auto">
           <div
-            class="hidden lg:flex items-center gap-9 font-sans text-[10px] font-semibold tracking-[0.24em] text-[#514A42] uppercase"
+            class="hidden lg:flex items-center gap-9 font-sans text-[12px] font-semibold tracking-[0.24em] text-[#514A42] uppercase"
           >
             <NuxtLink to="/reservation" class="nav-link">Reservation</NuxtLink>
             <NuxtLink to="/contact" class="nav-link active-link">Contact</NuxtLink>
           </div>
 
           <div class="flex items-center gap-3">
-            <button
-              class="nav-icon"
-              aria-label="Search"
-            >
-              <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1.6"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </button>
-
             <NuxtLink
               to="/login"
               class="nav-icon"
@@ -336,6 +322,53 @@
               <span>→</span>
             </a>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         CONTACT DETAILS TABLE
+    ========================================================== -->
+    <section class="bg-[#F1ECE3] py-16 md:py-20 px-6">
+      <div class="max-w-[1000px] mx-auto">
+        <div class="text-center mb-10">
+          <span class="section-kicker">Plan Your Visit</span>
+          <h2 class="section-title mt-3">Everything you need to know</h2>
+          <div class="gold-line mx-auto mt-5"></div>
+        </div>
+
+        <div class="contact-table-wrap">
+          <table class="contact-table">
+            <caption class="sr-only">Flavoria contact and visit information</caption>
+            <thead>
+              <tr>
+                <th scope="col">Information</th>
+                <th scope="col">Details</th>
+                <th scope="col">How to reach us</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in contactDetails" :key="item.id">
+                <th scope="row">{{ item.label }}</th>
+                <td>{{ item.details }}</td>
+                <td>
+                  <a
+                    v-if="item.contact_url"
+                    :href="item.contact_url"
+                    class="table-link"
+                  >
+                    {{ item.contact }}
+                  </a>
+                  <span v-else>{{ item.contact }}</span>
+                </td>
+              </tr>
+              <tr v-if="!contactDetails.length">
+                <td colspan="3" class="contact-table-empty">
+                  Contact details are currently unavailable.
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -578,14 +611,7 @@
 
               <!-- Map -->
               <div class="relative h-72 rounded-sm overflow-hidden border border-white/10 group">
-                <iframe
-                  title="Restaurant Location Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.119763973046!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1680000000000!5m2!1sen!2sus"
-                  class="w-full h-full border-0 grayscale contrast-75 opacity-70 group-hover:opacity-90 transition-opacity duration-500"
-                  allowfullscreen=""
-                  loading="lazy"
-                  referrerpolicy="no-referrer-when-downgrade"
-                ></iframe>
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3908.8555405427533!2d104.88799717537022!3d11.56221198863842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x310951adb4d4041d%3A0x8a90e729f62ad800!2sETEC%20Center!5e0!3m2!1skm!2skh!4v1788498283121!5m2!1skm!2skh" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 
                 <div class="absolute inset-0 pointer-events-none border border-[#C59237]/20"></div>
 
@@ -638,10 +664,20 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import Footer from '~/components/Footer.vue'
 
 const mobileMenuOpen = ref(false)
+const contactDetails = ref([])
+const config = useRuntimeConfig()
+
+onMounted(async () => {
+  try {
+    contactDetails.value = await $fetch(`${config.public.apiBase}/contact-info`)
+  } catch (error) {
+    console.error('Unable to load contact details:', error)
+  }
+})
 
 const form = reactive({
   name: '',
@@ -845,6 +881,82 @@ const submitContactForm = () => {
 
 .gold-link:hover {
   gap: 14px;
+}
+
+/* =========================================================
+   CONTACT DETAILS TABLE
+========================================================= */
+
+.contact-table-wrap {
+  overflow-x: auto;
+  background: #fffdf9;
+  border: 1px solid rgba(41, 37, 31, 0.1);
+  box-shadow: 0 18px 40px rgba(45, 37, 27, 0.06);
+}
+
+.contact-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+}
+
+.contact-table thead {
+  background: #211e1a;
+  color: #f6ead5;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.contact-table th,
+.contact-table td {
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(41, 37, 31, 0.09);
+  vertical-align: top;
+}
+
+.contact-table thead th {
+  font-weight: 600;
+  border-bottom-color: rgba(213, 166, 76, 0.45);
+}
+
+.contact-table tbody th {
+  width: 23%;
+  color: #29241f;
+  font-weight: 600;
+}
+
+.contact-table tbody td {
+  color: #82786c;
+  line-height: 1.7;
+}
+
+.contact-table tbody tr:last-child th,
+.contact-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.contact-table tbody tr:hover {
+  background: rgba(197, 146, 55, 0.06);
+}
+
+.table-link {
+  color: #a07832;
+  font-weight: 600;
+  transition: color 0.25s ease;
+}
+
+.table-link:hover {
+  color: #6f501f;
+}
+
+.contact-table-empty {
+  padding: 28px 22px;
+  text-align: center;
+  color: #82786c;
 }
 
 /* =========================================================

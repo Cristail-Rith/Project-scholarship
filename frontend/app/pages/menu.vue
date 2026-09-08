@@ -1,6 +1,5 @@
+
 <template>
-    <Navbar/>
-    <div>
-        hello world
-    </div>
+<Navbar/>
+
 </template>

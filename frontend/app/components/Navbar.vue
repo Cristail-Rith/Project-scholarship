@@ -62,6 +62,83 @@
             </svg>
           </button>
 
+          <!-- Search Overlay Panel -->
+          <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0 scale-95"
+            enter-to-class="opacity-100 scale-100"
+            leave-active-class="transition duration-200 ease-in"
+            leave-from-class="opacity-100 scale-100"
+            leave-to-class="opacity-0 scale-95"
+          >
+            <div
+              v-if="searchOpen"
+              class="fixed inset-0 z-[60] flex items-start justify-center pt-24 bg-black/50 backdrop-blur-sm"
+              @click.self="closeSearch"
+            >
+              <div class="relative w-full max-w-2xl mx-4">
+                <input
+                  ref="searchInput"
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Search products by name..."
+                  autocomplete="off"
+                  class="w-full px-4 py-3 pr-10 text-base text-neutral-900 bg-white border-2 border-stone-300 rounded-sm focus:outline-none focus:border-amber-700 shadow-lg"
+                  @keydown.esc="closeSearch"
+                />
+                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+
+                <!-- Results Dropdown -->
+                <transition
+                  enter-active-class="transition duration-150 ease-out"
+                  enter-from-class="opacity-0 -translate-y-1"
+                  enter-to-class="opacity-100 translate-y-0"
+                  leave-active-class="transition duration-150 ease-in"
+                  leave-from-class="opacity-100 translate-y-0"
+                  leave-to-class="opacity-0 -translate-y-1"
+                >
+                  <div
+                    v-if="filteredProducts.length > 0"
+                    class="absolute z-50 mt-1 w-full bg-white border border-stone-200 shadow-xl rounded-sm max-h-80 overflow-y-auto"
+                  >
+                    <button
+                      v-for="product in filteredProducts"
+                      :key="product.id"
+                      @click="goToProduct(product)"
+                      class="w-full flex items-center gap-3 p-3 text-left hover:bg-amber-50 transition-colors"
+                    >
+                      <img :src="product.image" :alt="product.title" class="w-12 h-12 object-cover rounded-sm border border-stone-200" />
+                      <div class="flex-1 min-w-0">
+                        <p class="font-sans text-sm font-semibold text-neutral-900 truncate">{{ product.title }}</p>
+                        <p class="font-sans text-xs text-stone-500 truncate">{{ product.category }}</p>
+                      </div>
+                      <span class="font-sans text-xs font-bold text-amber-700 shrink-0">${{ product.price.toFixed(2) }}</span>
+                    </button>
+                  </div>
+                </transition>
+
+                <!-- No Results Message -->
+                <transition
+                  enter-active-class="transition duration-150 ease-out"
+                  enter-from-class="opacity-0 -translate-y-1"
+                  enter-to-class="opacity-100 translate-y-0"
+                  leave-active-class="transition duration-150 ease-in"
+                  leave-from-class="opacity-100 translate-y-0"
+                  leave-to-class="opacity-0 -translate-y-1"
+                >
+                  <p
+                    v-if="filteredProducts.length === 0 && searchQuery.trim().length > 0"
+                    class="absolute z-50 mt-1 w-full bg-white border border-stone-200 shadow-xl rounded-sm p-4 text-sm text-stone-500 font-sans"
+                  >
+                    No products found for "{{ searchQuery }}"
+                  </p>
+                </transition>
+              </div>
+            </div>
+          </transition>
+
           <!-- User / Account -->
           <NuxtLink to="/login" class="p-1 hover:text-amber-700 transition-colors" aria-label="Account">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,7 +171,7 @@
           <li><NuxtLink @click="mobileMenuOpen = false" to="/" class="block py-2 hover:text-amber-400">HOME</NuxtLink></li>
           <li><NuxtLink @click="mobileMenuOpen = false" to="/menu" class="block py-2 hover:text-amber-400">MENU</NuxtLink></li>
           <li><NuxtLink @click="mobileMenuOpen = false" to="/about" class="block py-2 hover:text-amber-400">ABOUT</NuxtLink></li>
-          <li><NuxtLink @click="mobileMenuOpen = false" to="/reservation" class="block py-2 hover:text-amber-400">RESERVATION</NuxtLink></li>
+          <li><NuxtLink @click="mobileMenuOpen = false" to="/RESERVATION" class="block py-2 hover:text-amber-400">RESERVATION</NuxtLink></li>
           <li><NuxtLink @click="mobileMenuOpen = false" to="/chefs" class="block py-2 hover:text-amber-400">OUR CHEFS</NuxtLink></li>
           <li><NuxtLink @click="mobileMenuOpen = false" to="/events" class="block py-2 hover:text-amber-400">PRIVATE EVENTS</NuxtLink></li>
           <li><NuxtLink @click="mobileMenuOpen = false" to="/contact" class="block py-2 hover:text-amber-400">CONTACT US</NuxtLink></li>
@@ -105,13 +182,33 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
+import { useProducts } from '~/composables/useProducts'
+
+const { searchQuery, filteredProducts } = useProducts()
 
 const mobileMenuOpen = ref(false)
+const searchOpen = ref(false)
+const searchInput = ref(null)
 
 const toggleSearch = () => {
-  // Add your modal or toggle search bar logic here
-  console.log('Search toggled')
+  searchOpen.value = !searchOpen.value
+  if (searchOpen.value) {
+    searchQuery.value = ''
+    nextTick(() => searchInput.value?.focus())
+  } else {
+    searchQuery.value = ''
+  }
+}
+
+const closeSearch = () => {
+  searchOpen.value = false
+  searchQuery.value = ''
+}
+
+const goToProduct = (product) => {
+  closeSearch()
+  navigateTo(`/menu#product-${product.id}`)
 }
 </script>
 

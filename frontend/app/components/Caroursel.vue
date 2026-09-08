@@ -39,7 +39,7 @@
             </div>
 
             <!-- Main Heading -->
-            <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-stone-100 leading-[1.15] font-normal tracking-wide drop-shadow-md">
+            <h1 class="text-4xl sm:text-5xl md:text-5xl lg:text-7xl font-serif text-stone-100 leading-[1.15] font-normal tracking-wide drop-shadow-md">
               {{ slides[currentSlideIndex].titleLine1 }} <br />
               {{ slides[currentSlideIndex].titleLine2 }}
               <span class="italic text-[#C59237] font-serif block sm:inline">
@@ -126,7 +126,7 @@ const slides = [
   {
     subtitle: 'Handcrafted Perfection',
     titleLine1: 'Memorable Nights,',
-    titleLine2: 'Exquisite Gastronomy',
+    titleLine2: 'Exquisite Feasts',
     titleHighlight: 'Flavors',
     description: 'Savor organic seasonal creations in a serene, luxurious fine dining atmosphere.',
     bgImage: 'https://images.unsplash.com/photo-1514944288352-fffac99f0bdf?auto=format&fit=crop&w=1800&q=80'
