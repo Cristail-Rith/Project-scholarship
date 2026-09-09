@@ -1,7 +1,12 @@
 <template>
+<<<<<<< HEAD
     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6H6m12 4H6m12 4H6m12 4H6"/>
 </svg>
+=======
+hello
+    
+>>>>>>> 57a8fc4df4c8b8ba32b8ea9348a5ebc6b6e00d57
 
 
   <div class="login-container">

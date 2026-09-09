@@ -1,46 +1,7 @@
 <template>
   <header class="w-full font-serif text-neutral-800 bg-neutral-50 shadow-sm sticky top-0 z-50">
     <!-- Top Announcement Bar -->
-    <div class="bg-[#FAF6F0] text-[#7A6B5D] text-xs py-2 px-6 border-b border-stone-200/60 hidden md:block">
-      <div class="max-w-7xl mx-auto flex justify-between items-center font-sans tracking-wide">
-        <!-- Contact Info -->
-        <div class="flex items-center gap-6">
-          <a href="tel:+12345678900" class="flex items-center gap-2 hover:text-amber-800 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-            </svg>
-            <span>+1 234 567 8900</span>
-          </a>
-          <a href="mailto:hello@flavoria.com" class="flex items-center gap-2 hover:text-amber-800 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            <span>hello@flavoria.com</span>
-          </a>
-        </div>
-
-        <!-- Promo Banner -->
-        <div class="font-medium tracking-wider text-amber-900/80">
-          Free Delivery on Orders Above $50
-        </div>
-
-        <!-- Social Media Links -->
-        <div class="flex items-center gap-4">
-          <span class="text-[11px] uppercase tracking-widest text-stone-500 font-semibold">Follow Us:</span>
-          <div class="flex gap-3">
-            <a href="#" class="hover:text-amber-800 transition-colors" aria-label="Facebook">
-              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M9 8H6v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.374 14.5 5 15.5 5H18V0h-3.808C10.592 0 9 1.583 9 4.615V8z"/></svg>
-            </a>
-            <a href="#" class="hover:text-amber-800 transition-colors" aria-label="Instagram">
-              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-            </a>
-            <a href="#" class="hover:text-amber-800 transition-colors" aria-label="X/Twitter">
-              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- Main Navigation Bar -->
     <nav class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between font-sans">
@@ -102,6 +63,83 @@
             </svg>
           </button>
 
+          <!-- Search Overlay Panel -->
+          <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0 scale-95"
+            enter-to-class="opacity-100 scale-100"
+            leave-active-class="transition duration-200 ease-in"
+            leave-from-class="opacity-100 scale-100"
+            leave-to-class="opacity-0 scale-95"
+          >
+            <div
+              v-if="searchOpen"
+              class="fixed inset-0 z-[60] flex items-start justify-center pt-24 bg-black/50 backdrop-blur-sm"
+              @click.self="closeSearch"
+            >
+              <div class="relative w-full max-w-2xl mx-4">
+                <input
+                  ref="searchInput"
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Search products by name..."
+                  autocomplete="off"
+                  class="w-full px-4 py-3 pr-10 text-base text-neutral-900 bg-white border-2 border-stone-300 rounded-sm focus:outline-none focus:border-amber-700 shadow-lg"
+                  @keydown.esc="closeSearch"
+                />
+                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+
+                <!-- Results Dropdown -->
+                <transition
+                  enter-active-class="transition duration-150 ease-out"
+                  enter-from-class="opacity-0 -translate-y-1"
+                  enter-to-class="opacity-100 translate-y-0"
+                  leave-active-class="transition duration-150 ease-in"
+                  leave-from-class="opacity-100 translate-y-0"
+                  leave-to-class="opacity-0 -translate-y-1"
+                >
+                  <div
+                    v-if="filteredProducts.length > 0"
+                    class="absolute z-50 mt-1 w-full bg-white border border-stone-200 shadow-xl rounded-sm max-h-80 overflow-y-auto"
+                  >
+                    <button
+                      v-for="product in filteredProducts"
+                      :key="product.id"
+                      @click="goToProduct(product)"
+                      class="w-full flex items-center gap-3 p-3 text-left hover:bg-amber-50 transition-colors"
+                    >
+                      <img :src="product.image" :alt="product.title" class="w-12 h-12 object-cover rounded-sm border border-stone-200" />
+                      <div class="flex-1 min-w-0">
+                        <p class="font-sans text-sm font-semibold text-neutral-900 truncate">{{ product.title }}</p>
+                        <p class="font-sans text-xs text-stone-500 truncate">{{ product.category }}</p>
+                      </div>
+                      <span class="font-sans text-xs font-bold text-amber-700 shrink-0">${{ product.price.toFixed(2) }}</span>
+                    </button>
+                  </div>
+                </transition>
+
+                <!-- No Results Message -->
+                <transition
+                  enter-active-class="transition duration-150 ease-out"
+                  enter-from-class="opacity-0 -translate-y-1"
+                  enter-to-class="opacity-100 translate-y-0"
+                  leave-active-class="transition duration-150 ease-in"
+                  leave-from-class="opacity-100 translate-y-0"
+                  leave-to-class="opacity-0 -translate-y-1"
+                >
+                  <p
+                    v-if="filteredProducts.length === 0 && searchQuery.trim().length > 0"
+                    class="absolute z-50 mt-1 w-full bg-white border border-stone-200 shadow-xl rounded-sm p-4 text-sm text-stone-500 font-sans"
+                  >
+                    No products found for "{{ searchQuery }}"
+                  </p>
+                </transition>
+              </div>
+            </div>
+          </transition>
+
           <!-- User / Account -->
           <NuxtLink to="/login" class="p-1 hover:text-amber-700 transition-colors" aria-label="Account">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +172,7 @@
           <li><NuxtLink @click="mobileMenuOpen = false" to="/" class="block py-2 hover:text-amber-400">HOME</NuxtLink></li>
           <li><NuxtLink @click="mobileMenuOpen = false" to="/menu" class="block py-2 hover:text-amber-400">MENU</NuxtLink></li>
           <li><NuxtLink @click="mobileMenuOpen = false" to="/about" class="block py-2 hover:text-amber-400">ABOUT</NuxtLink></li>
-          <li><NuxtLink @click="mobileMenuOpen = false" to="/reservation" class="block py-2 hover:text-amber-400">RESERVATION</NuxtLink></li>
+          <li><NuxtLink @click="mobileMenuOpen = false" to="/RESERVATION" class="block py-2 hover:text-amber-400">RESERVATION</NuxtLink></li>
           <li><NuxtLink @click="mobileMenuOpen = false" to="/chefs" class="block py-2 hover:text-amber-400">OUR CHEFS</NuxtLink></li>
           <li><NuxtLink @click="mobileMenuOpen = false" to="/events" class="block py-2 hover:text-amber-400">PRIVATE EVENTS</NuxtLink></li>
           <li><NuxtLink @click="mobileMenuOpen = false" to="/contact" class="block py-2 hover:text-amber-400">CONTACT US</NuxtLink></li>
@@ -145,13 +183,33 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
+import { useProducts } from '~/composables/useProducts'
+
+const { searchQuery, filteredProducts } = useProducts()
 
 const mobileMenuOpen = ref(false)
+const searchOpen = ref(false)
+const searchInput = ref(null)
 
 const toggleSearch = () => {
-  // Add your modal or toggle search bar logic here
-  console.log('Search toggled')
+  searchOpen.value = !searchOpen.value
+  if (searchOpen.value) {
+    searchQuery.value = ''
+    nextTick(() => searchInput.value?.focus())
+  } else {
+    searchQuery.value = ''
+  }
+}
+
+const closeSearch = () => {
+  searchOpen.value = false
+  searchQuery.value = ''
+}
+
+const goToProduct = (product) => {
+  closeSearch()
+  navigateTo(`/menu#product-${product.id}`)
 }
 </script>
 
