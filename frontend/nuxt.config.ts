@@ -13,5 +13,18 @@ export default defineNuxtConfig({
     plugins: [
       tailwindcss(),
     ]
+  },
+
+  app: {
+    head: {
+      title: 'NHAM LENG24h',
+      meta: [
+        {
+          name: 'viewport',
+          content: 'width=device-width, initial-scale=1'
+        }
+      ]
+    }
   }
+
 })

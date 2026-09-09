@@ -84,6 +84,7 @@
             </span>
             <!-- Dropdown Menu -->
             <div class="absolute top-full right-0 w-48 bg-white border border-stone-200 shadow-lg rounded-sm py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              
               <NuxtLink to="/chefs" class="block px-4 py-2 text-xs hover:bg-amber-50 hover:text-amber-900 tracking-wider">OUR CHEFS</NuxtLink>
               <NuxtLink to="/events" class="block px-4 py-2 text-xs hover:bg-amber-50 hover:text-amber-900 tracking-wider">PRIVATE EVENTS</NuxtLink>
               <NuxtLink to="/gallery" class="block px-4 py-2 text-xs hover:bg-amber-50 hover:text-amber-900 tracking-wider">GALLERY</NuxtLink>

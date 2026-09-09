@@ -4,14 +4,14 @@
     <!-- HERO SECTION -->
     <section class="relative overflow-hidden pt-8 pb-16 md:py-20 lg:py-24 px-6 md:px-12 max-w-7xl mx-auto">
       <!-- Decorative Background Watercolor Leaf Element -->
-      <div class="absolute -bottom-10 left-1/3 w-64 h-64 bg-[radial-gradient(circle,_rgba(224,204,170,0.15)_0%,_transparent_70%)] pointer-events-none rounded-full blur-2xl"></div>
+      <div class="absolute -bottom-10 left-1/3 w-64 h-64 bg-[radial-gradient(circle,rgba(224,204,170,0.15)_0%,transparent_70%)] pointer-events-none rounded-full blur-2xl"></div>
       
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         <!-- Hero Text Content (Left) -->
         <div class="lg:col-span-6 space-y-6 z-10">
           <div class="inline-block">
             <span class="text-xs font-sans tracking-[0.3em] font-semibold text-[#B38B4D] uppercase flex items-center gap-2">
-              <span class="w-2 h-[1px] bg-[#B38B4D]"></span>
+              <span class="w-2 h-px bg-[#B38B4D]"></span>
               Experience Fine Dining
             </span>
           </div>
@@ -61,7 +61,7 @@
         <!-- Hero Plate Image (Right) -->
         <div class="lg:col-span-6 relative flex justify-center items-center">
           <!-- Soft Background Glow -->
-          <div class="absolute w-[80%] h-[80%] bg-gradient-to-tr from-[#f5ebd7] to-[#e8d2b0] rounded-full blur-3xl opacity-50 -z-10"></div>
+          <div class="absolute w-[80%] h-[80%] bg-linear-to-tr from-[#f5ebd7] to-[#e8d2b0] rounded-full blur-3xl opacity-50 -z-10"></div>
           
           <div class="relative group">
             <img
@@ -91,11 +91,11 @@
           </h2>
           <!-- Crown Divider -->
           <div class="flex items-center justify-center gap-3 mt-3 text-[#C59237]">
-            <span class="w-10 h-[1px] bg-amber-600/40"></span>
+            <span class="w-10 h-px bg-amber-600/40"></span>
             <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
               <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
             </svg>
-            <span class="w-10 h-[1px] bg-amber-600/40"></span>
+            <span class="w-10 h-px bg-amber-600/40"></span>
           </div>
         </div>
 
@@ -132,11 +132,11 @@
         </h2>
         <!-- Crown Divider -->
         <div class="flex items-center justify-center gap-3 mt-3 text-[#C59237]">
-          <span class="w-10 h-[1px] bg-amber-600/40"></span>
+          <span class="w-10 h-px bg-amber-600/40"></span>
           <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
             <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
           </svg>
-          <span class="w-10 h-[1px] bg-amber-600/40"></span>
+          <span class="w-10 h-px bg-amber-600/40"></span>
         </div>
       </div>
 
