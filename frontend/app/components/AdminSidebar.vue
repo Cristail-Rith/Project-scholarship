@@ -95,6 +95,7 @@ const managementLinks = [
 	{ label: 'Products', to: '/admin/products', icon: 'M4 7l8-4 8 4-8 4-8-4zm0 5l8 4 8-4M4 17l8 4 8-4' },
 	{ label: 'Categories', to: '/admin/categories', icon: 'M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 15h6v4H4v-4zm10 0h6v4h-6v-4z' },
 	{ label: 'Tables', to: '/admin/tables', icon: 'M4 5h16M4 19h16M6 5v14M18 5v14M4 12h16' },
+	{ label: 'Customers', to: '/admin/customer', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0M19 8a3 3 0 010 6m2 7a5 5 0 00-3-4.58' },
 	{ label: 'Users', to: '/admin/users', icon: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m7-8a4 4 0 100-8 4 4 0 000 8zm7-5a3 3 0 110 6m4 7v-2a4 4 0 00-3-3.87' }
 ]
 

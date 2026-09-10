@@ -3,87 +3,7 @@
   <Caroursel/>
   <div class="min-h-screen bg-[#FDFBF7] text-neutral-800 font-serif">
     <!-- HERO SECTION -->
-    <section class="relative overflow-hidden pt-8 pb-16 md:py-20 lg:py-24 px-6 md:px-12 max-w-7xl mx-auto">
-      <!-- Decorative Background Watercolor Leaf Element -->
-      <div class="absolute -bottom-10 left-1/3 w-64 h-64 bg-[radial-gradient(circle,rgba(224,204,170,0.15)_0%,transparent_70%)] pointer-events-none rounded-full blur-2xl"></div>
-      
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-        <!-- Hero Text Content (Left) -->
-        <div class="lg:col-span-6 space-y-6 z-10">
-          <div class="inline-block">
-            <span class="text-xs font-sans tracking-[0.3em] font-semibold text-[#B38B4D] uppercase flex items-center gap-2">
-              <span class="w-2 h-px bg-[#B38B4D]"></span>
-              Experience Fine Dining
-            </span>
-          </div>
-
-          <h1 class="text-4xl sm:text-5xl xl:text-6xl font-serif text-neutral-900 leading-[1.15] font-normal tracking-wide">
-            Delicious Food, <br />
-            Unforgettable <span class="italic text-[#C59B27] font-serif">Moments</span>
-          </h1>
-
-          <p class="font-sans text-stone-600 text-sm md:text-base leading-relaxed max-w-md font-light">
-            A perfect blend of taste, art, and ambiance. <br class="hidden sm:inline" />
-            Crafted to delight your senses.
-          </p>
-
-          <!-- Action Buttons -->
-          <div class="flex flex-wrap items-center gap-4 pt-2 font-sans">
-            <NuxtLink
-              to="/reservation"
-              class="px-8 py-3.5 bg-[#C59237] hover:bg-[#b0802c] text-white text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md hover:shadow-lg rounded-sm"
-            >
-              Book A Table
-            </NuxtLink>
-
-            <NuxtLink
-              to="/menu"
-              class="px-8 py-3.5 border border-stone-800 hover:bg-stone-900 hover:text-white text-stone-800 text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 rounded-sm"
-            >
-              Explore Menu
-            </NuxtLink>
-          </div>
-
-          <!-- Carousel Indicators -->
-          <div class="flex items-center gap-2 pt-6">
-            <button
-              v-for="(slide, index) in 3"
-              :key="index"
-              @click="activeSlide = index"
-              :class="[
-                'h-2.5 rounded-full transition-all duration-300',
-                activeSlide === index ? 'w-8 bg-[#C59237]' : 'w-2.5 bg-stone-300 hover:bg-stone-400'
-              ]"
-              :aria-label="`Slide ${index + 1}`"
-            ></button>
-          </div>
-        </div>
-
-        <!-- Hero Plate Image (Right) -->
-        <div class="lg:col-span-6 relative flex justify-center items-center">
-          <!-- Soft Background Glow -->
-          <div class="absolute w-[80%] h-[80%] bg-linear-to-tr from-[#f5ebd7] to-[#e8d2b0] rounded-full blur-3xl opacity-50 -z-10"></div>
-          
-          <div class="relative group">
-            <img
-              src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80"
-              alt="Gourmet Fine Dining Dish"
-              class="w-full max-w-lg lg:max-w-xl object-contain drop-shadow-2xl transition-transform duration-700 hover:scale-[1.02]"
-            />
-
-            <!-- Subtle Decorative Botanical SVG Floating Accent -->
-            <div class="absolute -bottom-6 -left-6 w-24 h-24 opacity-30 pointer-events-none">
-              <svg viewBox="0 0 100 100" fill="#4A5D4E">
-                <path d="M50 10C30 30 10 50 10 80c20 0 40-20 60-40 10-10 10-20 0-30z"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-=======
     
->>>>>>> 57a8fc4df4c8b8ba32b8ea9348a5ebc6b6e00d57
 
     <!-- OUR MENU CATEGORIES SECTION -->
     <section class="py-16 bg-[#FAF7F2] border-t border-b border-stone-200/50">
@@ -166,24 +86,27 @@
         <div
           v-for="item in filteredItems"
           :key="item.id"
-          class="bg-white border border-stone-200/80 rounded-sm p-5 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col justify-between group"
+          class="cursor-pointer bg-white border border-stone-200/80 rounded-sm p-5 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col justify-between group"
+          @click="goToProduct(item)"
         >
           <div>
             <div class="relative overflow-hidden mb-4 rounded-sm h-48">
-              <img
-                :src="item.image"
-                :alt="item.title"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+              <button type="button" class="block w-full h-full text-left" @click.stop="goToProduct(item)">
+                <img
+                  :src="item.image"
+                  :alt="item.title"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </button>
               <span class="absolute top-3 right-3 bg-stone-900/80 text-amber-300 text-[10px] font-sans px-2.5 py-1 tracking-wider uppercase backdrop-blur-sm">
                 ★ {{ item.rating }}
               </span>
             </div>
 
             <div class="flex justify-between items-start mb-2">
-              <h3 class="font-serif text-lg font-medium text-stone-900 group-hover:text-[#C59237] transition-colors">
+              <button type="button" class="font-serif text-left text-lg font-medium text-stone-900 group-hover:text-[#C59237] transition-colors" @click.stop="goToProduct(item)">
                 {{ item.title }}
-              </h3>
+              </button>
               <span class="font-sans font-bold text-base text-[#C59237] ml-2">${{ item.price.toFixed(2) }}</span>
             </div>
 
@@ -193,7 +116,7 @@
           </div>
 
           <button
-            @click="addToCart(item)"
+            @click.stop="addItemToCart(item)"
             class="w-full py-2.5 bg-stone-100 hover:bg-[#C59237] hover:text-white text-stone-800 text-xs font-sans font-semibold tracking-wider uppercase transition-colors duration-300 rounded-sm"
           >
             Add To Order
@@ -201,6 +124,40 @@
         </div>
       </div>
     </section>
+
+    <!-- Cart sidebar -->
+    <div v-if="isCartOpen" class="fixed inset-0 z-50 bg-stone-950/60" @click.self="isCartOpen = false">
+      <aside class="ml-auto flex h-full w-full max-w-md flex-col bg-white p-6 text-stone-900 shadow-2xl">
+        <div class="flex items-center justify-between border-b-2 border-stone-900 pb-4">
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-widest text-amber-700">Added to your order</span>
+            <h2 class="font-serif text-2xl">Your Cart</h2>
+          </div>
+          <button type="button" class="text-2xl text-stone-400 hover:text-stone-900" aria-label="Close cart" @click="isCartOpen = false">&times;</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto py-5">
+          <div v-if="!cartItems.length" class="py-12 text-center text-sm text-stone-500">Your cart is empty.</div>
+          <div v-for="item in cartItems" :key="item.id" class="flex items-center gap-3 border-b border-stone-200 py-4">
+            <img :src="item.image" :alt="item.title" class="h-16 w-16 object-cover" />
+            <div class="min-w-0 flex-1">
+              <button type="button" class="block truncate text-left font-serif hover:text-amber-700" @click="goToProduct(item)">{{ item.title }}</button>
+              <p class="text-xs text-amber-700">${{ (item.price * item.quantity).toFixed(2) }}</p>
+              <div class="mt-2 flex items-center gap-2">
+                <button type="button" class="h-6 w-6 border border-stone-300" @click="updateCartQuantity(item.id, item.quantity - 1)">-</button>
+                <span class="w-5 text-center text-xs">{{ item.quantity }}</span>
+                <button type="button" class="h-6 w-6 border border-stone-300" @click="updateCartQuantity(item.id, item.quantity + 1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t-2 border-stone-900 pt-4">
+          <div class="flex justify-between font-bold"><span>Total</span><span>${{ totalPrice.toFixed(2) }}</span></div>
+          <button type="button" class="mt-4 w-full bg-amber-600 py-3 text-xs font-bold uppercase tracking-widest text-white hover:bg-amber-700" @click="isCartOpen = false">Continue shopping</button>
+        </div>
+      </aside>
+    </div>
   </div>
   <Footer/>
 </template>
@@ -210,9 +167,11 @@ import { ref, computed } from 'vue'
 import { useProducts } from '~/composables/useProducts'
 
 const { products } = useProducts()
+const { items: cartItems, addToCart, updateQuantity, totalPrice } = useCart()
 
 const activeSlide = ref(0)
 const selectedTab = ref('All Items')
+const isCartOpen = ref(false)
 
 const categories = [
   {
@@ -252,7 +211,17 @@ const filteredItems = computed(() => {
   return items.value.filter(item => item.category === selectedTab.value)
 })
 
-const addToCart = (item) => {
-  console.log('Added to cart:', item.title)
+const goToProduct = (item) => {
+  navigateTo(`/product/${item.id}`)
 }
+
+const addItemToCart = (item) => {
+  addToCart(item)
+  isCartOpen.value = true
+}
+
+const updateCartQuantity = (id, quantity) => {
+  updateQuantity(id, quantity)
+}
+
 </script>

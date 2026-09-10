@@ -1,13 +1,4 @@
 <template>
-<<<<<<< HEAD
-    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6H6m12 4H6m12 4H6m12 4H6"/>
-</svg>
-=======
-hello
-    
->>>>>>> 57a8fc4df4c8b8ba32b8ea9348a5ebc6b6e00d57
-
 
   <div class="login-container">
 
@@ -53,14 +44,14 @@ hello
 
           <!-- Username -->
           <div class="form-group">
-            <label for="username">Username</label>
+            <label for="email">Email</label>
 
             <input
-              id="username"
-              v-model="username"
-              type="text"
-              placeholder="e.g. johndoe"
-              autocomplete="username"
+              id="email"
+              v-model="email"
+              type="email"
+              placeholder="you@example.com"
+              autocomplete="email"
               required
             />
           </div>
@@ -135,26 +126,26 @@ hello
 <script setup>
 import { ref } from 'vue'
 
-const username = ref('')
+const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const showPassword = ref(false)
 const message = ref('')
 
-const handleLogin = () => {
-  if (!username.value || !password.value) {
-    message.value = 'Please enter your username and password.'
+const { login } = useAuth()
+
+const handleLogin = async () => {
+  if (!email.value || !password.value) {
+    message.value = 'Please enter your email and password.'
     return
   }
 
-  // Demo login
-  if (
-    username.value === 'admin' &&
-    password.value === '123456'
-  ) {
+  try {
+    await login(email.value, password.value)
     message.value = 'Login successful!'
-  } else {
-    message.value = 'Invalid username or password.'
+    await navigateTo('/')
+  } catch (error) {
+    message.value = error?.data?.message || 'Invalid email or password.'
   }
 }
 </script>

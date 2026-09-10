@@ -1,497 +1,142 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import Navbar from '~/components/Navbar.vue';
 
-const features = [
+// Highlights / Stats Data
+const stats = ref([
+  { label: 'Years of Tradition', value: '15+' },
+  { label: 'Master Chefs', value: '08' },
+  { label: 'Artisanal Recipes', value: '45+' },
+  { label: 'Local Suppliers', value: '100%' }
+])
+
+// Brand Features
+const features = ref([
   {
-    icon: '🍕',
-    title: 'Fresh Ingredients',
-    text: 'We carefully select fresh and high-quality ingredients for every meal we prepare.'
+    title: 'Locally Sourced Ingredients',
+    description: 'Partnering directly with organic local farmers to bring fresh, peak-season produce to your table every day.'
   },
   {
-    icon: '👨‍🍳',
-    title: 'Professional Chefs',
-    text: 'Our experienced chefs prepare delicious meals with passion and attention to detail.'
+    title: 'Woodfired Craftsmanship',
+    description: 'Our signature dishes are slow-cooked over natural wood embers for deep, smoky flavors and rich textures.'
   },
   {
-    icon: '❤️',
-    title: 'Made With Love',
-    text: 'Every dish is made with love to give our customers a memorable dining experience.'
+    title: 'Uncompromised Passion',
+    description: 'Every recipe is developed with dedicated precision, balancing traditional culinary heritage with modern flair.'
   }
-]
-
-const stats = [
-  { number: '10+', label: 'Years Experience' },
-  { number: '50+', label: 'Food Items' },
-  { number: '10K+', label: 'Happy Customers' },
-  { number: '20+', label: 'Professional Staff' }
-]
-
+])
 </script>
 
-
-
 <template>
-  <div class="min-h-screen bg-[#15151b] text-white">
-
-    <Navbar/>
-
-    <!-- ================= HERO ================= -->
-    <section
-      class="relative min-h-107.5 flex items-center overflow-hidden"
-    >
-
-      <!-- Background image -->
-      <img
-        src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1600&q=80"
-        alt="Restaurant food"
-        class="absolute inset-0 w-full h-full object-cover"
-      />
-
-      <!-- Overlay -->
-      <div class="absolute inset-0 bg-black/75"></div>
-
-      <div class="relative max-w-6xl mx-auto px-6 w-full">
-
-        <div class="max-w-xl">
-
-          <p class="text-orange-500 uppercase tracking-[4px] text-sm font-bold mb-4">
-            Welcome To Food Lover
-          </p>
-
-          <h1 class="text-5xl md:text-6xl font-extrabold leading-tight mb-5">
-            About
-            <span class="text-orange-500">Our Restaurant</span>
-          </h1>
-
-          <p class="text-gray-300 leading-7 max-w-lg">
-            We believe that great food brings people together.
-            Our restaurant is dedicated to serving delicious,
-            fresh and memorable meals in a warm and friendly
-            environment.
-          </p>
-
-          <div class="mt-8 flex gap-4">
-
-            <NuxtLink
-              to="/menu"
-              class="bg-orange-500 hover:bg-orange-600 px-7 py-3 rounded-md font-bold text-sm transition"
-            >
-              VIEW OUR MENU
-            </NuxtLink>
-
-            <NuxtLink
-              to="/contact"
-              class="border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-7 py-3 rounded-md font-bold text-sm transition"
-            >
-              CONTACT US
-            </NuxtLink>
-
+  <Navbar/>
+  <section class="bg-white text-stone-900 font-sans py-24 px-4 sm:px-6 lg:px-8 border-t-2 border-stone-900 selection:bg-amber-600 selection:text-white">
+    <div class="max-w-7xl mx-auto space-y-20">
+      
+      <!-- Top Layout: Story Content & Image Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        
+        <!-- Left Column: Editorial Text -->
+        <div class="lg:col-span-6 space-y-6">
+          
+          <!-- Accent Subtitle -->
+          <div class="flex items-center gap-3">
+            <span class="h-px w-10 bg-amber-600"></span>
+            <span class="text-amber-700 text-xs font-black uppercase tracking-[0.25em]">Our Story</span>
           </div>
 
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ================= ABOUT US ================= -->
-    <section class="max-w-6xl mx-auto px-6 py-20">
-
-      <div class="grid md:grid-cols-2 gap-12 items-center">
-
-        <!-- Image -->
-        <div class="relative">
-
-          <img
-            src="https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=80"
-            alt="Restaurant"
-            class="w-full h-107.5 object-cover rounded-lg"
-          />
-
-          <!-- Orange decoration -->
-          <div
-            class="absolute -bottom-5 -right-5 w-32 h-32 border-8 border-orange-500 rounded-lg -z-10"
-          ></div>
-
-        </div>
-
-
-        <!-- Content -->
-        <div>
-
-          <p class="text-orange-500 uppercase tracking-[3px] text-sm font-bold mb-3">
-            Our Story
-          </p>
-
-          <h2 class="text-4xl font-extrabold mb-6">
-            We Make Food
-            <span class="text-orange-500">With Passion</span>
+          <!-- Section Heading -->
+          <h2 class="text-4xl sm:text-5xl font-serif font-black text-stone-900 tracking-tight leading-tight uppercase">
+            Crafting Culinary <br />
+            <span class="text-amber-700 italic font-serif font-normal">Memories Since 2011</span>
           </h2>
 
-          <p class="text-gray-400 leading-7 mb-5">
-            Food Lover started with a simple idea: create a place
-            where people can enjoy delicious food, relax with
-            friends and family, and feel at home.
+          <!-- Main Narrative -->
+          <p class="text-stone-700 text-sm sm:text-base leading-relaxed font-medium">
+            Founded with a simple vision: to unite people through the rich, comforting warmth of authentic woodfired cooking and uncompromised hospitality. What began as a small family kitchen has grown into a cherished dining destination.
           </p>
 
-          <p class="text-gray-400 leading-7 mb-6">
-            From our kitchen to your table, every meal is carefully
-            prepared using fresh ingredients and traditional
-            cooking techniques. We always focus on quality,
-            flavor and customer satisfaction.
+          <p class="text-stone-600 text-xs sm:text-sm leading-relaxed">
+            We believe that extraordinary food starts long before the kitchen. It begins in the soil with our partner farmers, continues through our wood-fueled hearths, and finishes on your plate with meticulous attention to detail.
           </p>
 
-          <div class="flex items-center gap-4">
+          <!-- Action Button & Chef Quote Signature -->
+          <div class="pt-4 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <button 
+              class="bg-stone-900 hover:bg-amber-600 text-white font-extrabold text-xs px-8 py-4 uppercase tracking-widest transition-all duration-200 border-2 border-stone-900 hover:border-amber-600 rounded-none shadow-xs active:translate-y-0.5"
+            >
+              Explore Our Story
+            </button>
 
-            <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-2xl">
-              👨‍🍳
+            <div class="border-l-2 border-amber-600 pl-4 py-1">
+              <p class="font-serif italic text-stone-900 font-bold text-sm">"Flavor is a memory waiting to happen."</p>
+              <span class="text-[10px] text-stone-500 font-bold uppercase tracking-wider">— Master Chef & Founder</span>
             </div>
-
-            <div>
-              <h3 class="font-bold">
-                Experienced Chefs
-              </h3>
-
-              <p class="text-sm text-gray-500">
-                Cooking with passion since 2015
-              </p>
-            </div>
-
           </div>
 
         </div>
 
-      </div>
-
-    </section>
-
-
-    <!-- ================= STATS ================= -->
-    <section class="bg-orange-500 py-14">
-
-      <div class="max-w-6xl mx-auto px-6">
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-
-          <div
-            v-for="stat in stats"
-            :key="stat.label"
-          >
-            <h3 class="text-4xl font-extrabold mb-2">
-              {{ stat.number }}
-            </h3>
-
-            <p class="text-sm font-semibold uppercase tracking-wide">
-              {{ stat.label }}
-            </p>
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ================= WHY CHOOSE US ================= -->
-    <section class="max-w-6xl mx-auto px-6 py-20">
-
-      <div class="text-center mb-12">
-
-        <p class="text-orange-500 uppercase tracking-[3px] text-sm font-bold mb-3">
-          Why Choose Us
-        </p>
-
-        <h2 class="text-4xl font-extrabold">
-          What Makes Us <span class="text-orange-500">Special?</span>
-        </h2>
-
-        <p class="text-gray-500 max-w-xl mx-auto mt-4">
-          We are committed to providing excellent food and
-          excellent service to every customer.
-        </p>
-
-      </div>
-
-
-      <!-- Feature Cards -->
-      <div class="grid md:grid-cols-3 gap-6">
-
-        <div
-          v-for="feature in features"
-          :key="feature.title"
-          class="bg-[#202026] border border-gray-800 rounded-lg p-8 text-center hover:border-orange-500 transition duration-300"
-        >
-
-          <div
-            class="w-16 h-16 mx-auto mb-5 bg-orange-500/10 border border-orange-500 rounded-full flex items-center justify-center text-3xl"
-          >
-            {{ feature.icon }}
-          </div>
-
-          <h3 class="text-xl font-bold mb-3">
-            {{ feature.title }}
-          </h3>
-
-          <p class="text-gray-500 text-sm leading-6">
-            {{ feature.text }}
-          </p>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ================= MISSION ================= -->
-    <section class="bg-[#202026]">
-
-      <div class="max-w-6xl mx-auto px-6 py-20">
-
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-
-          <div>
-
-            <p class="text-orange-500 uppercase tracking-[3px] text-sm font-bold mb-3">
-              Our Mission
-            </p>
-
-            <h2 class="text-4xl font-extrabold mb-6">
-              Good Food.
-              <span class="text-orange-500">
-                Good Mood.
-              </span>
-            </h2>
-
-            <p class="text-gray-400 leading-7 mb-6">
-              Our mission is to make every visit special.
-              We want our customers to enjoy not only great
-              food but also great service and a comfortable
-              atmosphere.
-            </p>
-
-            <ul class="space-y-4">
-
-              <li class="flex gap-3 items-center">
-                <span class="text-orange-500 text-xl">✓</span>
-                <span class="text-gray-300">
-                  Fresh and quality ingredients
-                </span>
-              </li>
-
-              <li class="flex gap-3 items-center">
-                <span class="text-orange-500 text-xl">✓</span>
-                <span class="text-gray-300">
-                  Delicious meals prepared daily
-                </span>
-              </li>
-
-              <li class="flex gap-3 items-center">
-                <span class="text-orange-500 text-xl">✓</span>
-                <span class="text-gray-300">
-                  Friendly and professional service
-                </span>
-              </li>
-
-              <li class="flex gap-3 items-center">
-                <span class="text-orange-500 text-xl">✓</span>
-                <span class="text-gray-300">
-                  Comfortable restaurant atmosphere
-                </span>
-              </li>
-
-            </ul>
-
-          </div>
-
-
-          <!-- Food Image -->
+        <!-- Right Column: Sharp Visual Grid -->
+        <div class="lg:col-span-6 relative">
+          
           <div class="grid grid-cols-2 gap-4">
+            <!-- Large Image -->
+            <div class="border-2 border-stone-900 bg-stone-100 overflow-hidden group">
+              <img 
+                src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80" 
+                alt="Chef preparing grill" 
+                class="w-full h-80 sm:h-96 object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+              />
+            </div>
 
-            <img
-              src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=700&q=80"
-              class="w-full h-64 object-cover rounded-lg"
-              alt="Fresh food"
-            />
-
-            <img
-              src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=700&q=80"
-              class="w-full h-64 object-cover rounded-lg mt-10"
-              alt="Pizza"
-            />
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ================= CTA ================= -->
-    <section class="relative py-20 overflow-hidden">
-
-      <div class="absolute inset-0">
-        <img
-          src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80"
-          class="w-full h-full object-cover"
-          alt="Restaurant interior"
-        />
-
-        <div class="absolute inset-0 bg-black/80"></div>
-      </div>
-
-      <div class="relative max-w-3xl mx-auto px-6 text-center">
-
-        <h2 class="text-4xl md:text-5xl font-extrabold mb-5">
-          Ready To Enjoy
-          <span class="text-orange-500">Our Food?</span>
-        </h2>
-
-        <p class="text-gray-300 mb-8">
-          Visit us today and discover delicious food made
-          with passion and fresh ingredients.
-        </p>
-
-        <NuxtLink
-          to="/menu"
-          class="inline-block bg-orange-500 hover:bg-orange-600 px-8 py-3 rounded-md font-bold transition"
-        >
-          EXPLORE OUR MENU
-        </NuxtLink>
-
-      </div>
-
-    </section>
-
-
-    <!-- ================= FOOTER ================= -->
-    <footer class="bg-[#303036]">
-
-      <div class="max-w-6xl mx-auto px-6 py-12">
-
-        <div class="grid md:grid-cols-3 gap-10">
-
-          <!-- Logo -->
-          <div>
-
-            <div class="flex items-center gap-2 mb-4">
-
-              <div
-                class="w-10 h-10 rounded-full border-2 border-orange-500 flex items-center justify-center text-orange-500"
-              >
-                ♡
+            <!-- Second Image with Offset Accent Badge -->
+            <div class="space-y-4 flex flex-col justify-between">
+              <div class="border-2 border-stone-900 bg-stone-100 overflow-hidden group h-full">
+                <img 
+                  src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80" 
+                  alt="Restaurant interior ambiance" 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
               </div>
 
-              <h2 class="text-xl font-bold">
-                Food <span class="text-orange-500">Lover</span>
-              </h2>
-
+              <!-- Accent Badge Box -->
+              <div class="bg-stone-900 text-white p-5 border-2 border-stone-900 rounded-none space-y-1">
+                <span class="text-amber-500 text-xs font-black uppercase tracking-widest">Quality Guaranteed</span>
+                <p class="text-xs font-medium text-stone-300">Flame-cooked perfection with 100% organic oakwood embers.</p>
+              </div>
             </div>
-
-            <p class="text-gray-400 text-sm leading-6">
-              Delicious food, friendly service and a warm
-              atmosphere. Welcome to Food Lover.
-            </p>
-
           </div>
-
-
-          <!-- Quick Links -->
-          <div>
-
-            <h3 class="font-bold text-lg mb-4">
-              Quick Links
-            </h3>
-
-            <div class="space-y-2 text-sm text-gray-400">
-
-              <NuxtLink to="/" class="block hover:text-orange-500">
-                Home
-              </NuxtLink>
-
-              <NuxtLink to="/about" class="block hover:text-orange-500">
-                About Us
-              </NuxtLink>
-
-              <NuxtLink to="/menu" class="block hover:text-orange-500">
-                Menu
-              </NuxtLink>
-
-              <NuxtLink to="/contact" class="block hover:text-orange-500">
-                Contact
-              </NuxtLink>
-
-            </div>
-
-          </div>
-
-
-          <!-- Contact -->
-          <div>
-
-            <h3 class="font-bold text-lg mb-4">
-              Contact Us
-            </h3>
-
-            <div class="space-y-3 text-sm text-gray-400">
-
-              <p>📍 Phnom Penh, Cambodia</p>
-              <p>📞 +855 12 345 678</p>
-              <p>✉️ foodlover@gmail.com</p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- Bottom -->
-        <div class="border-t border-gray-700 mt-10 pt-6 text-center">
-
-          <div class="flex justify-center gap-4 mb-4">
-
-            <a
-              href="#"
-              class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-orange-500 transition"
-            >
-              f
-            </a>
-
-            <a
-              href="#"
-              class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-orange-500 transition"
-            >
-              ◎
-            </a>
-
-            <a
-              href="#"
-              class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-orange-500 transition"
-            >
-              📷
-            </a>
-
-            <a
-              href="#"
-              class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-orange-500 transition"
-            >
-              p
-            </a>
-
-          </div>
-
-          <p class="text-gray-500 text-xs">
-            © 2026 Food Lover. All Rights Reserved.
-          </p>
 
         </div>
 
       </div>
 
-    </footer>
+      <!-- Middle Divider: Key Features Row -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 border-y-2 border-stone-900 py-12">
+        <div 
+          v-for="(feature, idx) in features" 
+          :key="idx" 
+          class="space-y-2 pr-4 border-l-2 border-transparent hover:border-amber-600 pl-4 transition-colors"
+        >
+          <span class="text-amber-700 font-mono font-bold text-xs">0{{ idx + 1 }}.</span>
+          <h3 class="text-lg font-serif font-black text-stone-900 uppercase tracking-tight">{{ feature.title }}</h3>
+          <p class="text-stone-600 text-xs leading-relaxed font-medium">{{ feature.description }}</p>
+        </div>
+      </div>
 
-  </div>
+      <!-- Bottom Stats Counter Section -->
+      <div class="bg-stone-50 border-2 border-stone-900 p-8 sm:p-12">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x-0 sm:divide-x-2 divide-stone-200">
+          <div 
+            v-for="(stat, idx) in stats" 
+            :key="idx"
+            class="space-y-1"
+          >
+            <div class="text-4xl sm:text-5xl font-serif font-black text-amber-700">{{ stat.value }}</div>
+            <div class="text-xs font-extrabold text-stone-900 uppercase tracking-widest">{{ stat.label }}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
 </template>

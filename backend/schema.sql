@@ -26,6 +26,11 @@ CREATE TABLE IF NOT EXISTS products (
     rating VARCHAR(10) NOT NULL DEFAULT '0.0',
     image VARCHAR(500) NOT NULL DEFAULT '',
     category_id INT NOT NULL,
+    sku VARCHAR(80) NOT NULL DEFAULT '',
+    cost_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    reorder_level INT NOT NULL DEFAULT 5,
+    status VARCHAR(20) NOT NULL DEFAULT 'Out of Stock',
     CONSTRAINT fk_products_category
         FOREIGN KEY (category_id) REFERENCES categories (id)
         ON UPDATE CASCADE ON DELETE RESTRICT

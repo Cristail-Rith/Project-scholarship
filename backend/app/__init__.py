@@ -1,9 +1,11 @@
 from flask import Flask
 from flask_cors import CORS
+from sqlalchemy import inspect, text
 from app.config import Config
 from app.extensions import db, migrate, jwt
-from app.routes import auth, categories, contact, products, orders
+from app.routes import auth, categories, contact, products, orders, tables
 from app.models.contact_detail import ContactDetail
+from app.models.category import Category
 
 
 def create_app():
@@ -20,6 +22,7 @@ def create_app():
     app.register_blueprint(contact.bp)
     app.register_blueprint(products.bp)
     app.register_blueprint(orders.bp)
+    app.register_blueprint(tables.bp)
 
     @app.get("/")
     def health_check():
@@ -27,6 +30,8 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        ensure_product_columns()
+        seed_categories()
         seed_contact_details()
 
     return app
@@ -81,3 +86,42 @@ def seed_contact_details():
     ]
     db.session.add_all(ContactDetail(**item) for item in details)
     db.session.commit()
+
+
+def seed_categories():
+    category_names = (
+        "Starters", "Main Course", "Desserts", "Beverages", "Pizza"
+    )
+    existing_names = {category.name for category in Category.query.all()}
+    missing_categories = [
+        Category(name=name)
+        for name in category_names
+        if name not in existing_names
+    ]
+    if missing_categories:
+        db.session.add_all(missing_categories)
+        db.session.commit()
+
+
+def ensure_product_columns():
+    existing_columns = {
+        column["name"] for column in inspect(db.engine).get_columns("products")
+    }
+    columns = {
+        "sku": "VARCHAR(80) NOT NULL DEFAULT ''",
+        "cost_price": "FLOAT NOT NULL DEFAULT 0",
+        "stock_quantity": "INTEGER NOT NULL DEFAULT 0",
+        "reorder_level": "INTEGER NOT NULL DEFAULT 5",
+        "status": "VARCHAR(20) NOT NULL DEFAULT 'Out of Stock'",
+    }
+    missing_columns = [
+        (name, definition)
+        for name, definition in columns.items()
+        if name not in existing_columns
+    ]
+    for name, definition in missing_columns:
+        db.session.execute(
+            text(f"ALTER TABLE products ADD COLUMN {name} {definition}")
+        )
+    if missing_columns:
+        db.session.commit()

@@ -12,7 +12,9 @@ const showConfirmPassword = ref(false)
 const message = ref('')
 const success = ref(false)
 
-function register() {
+const { register: registerUser } = useAuth()
+
+async function register() {
   message.value = ''
   success.value = false
 
@@ -37,10 +39,14 @@ function register() {
     return
   }
 
-  success.value = true
-  message.value = 'Account created successfully!'
-
-  console.log(form.value)
+  try {
+    await registerUser(form.value.name, form.value.email, form.value.password)
+    success.value = true
+    message.value = 'Account created successfully!'
+    await navigateTo('/login')
+  } catch (error: any) {
+    message.value = error?.data?.message || 'Unable to create your account.'
+  }
 }
 </script>
 
