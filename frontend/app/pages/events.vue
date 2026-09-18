@@ -190,10 +190,15 @@
 </section>
 
   </main>
+  <CartSidebar/>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import CartSidebar from '~/components/CartSidebar.vue'
+import { useCart } from '~/composables/useCart'
+
+useCart()
 
 const venues = [
   {

@@ -116,9 +116,12 @@ def update_product(product_id):
     ):
         return jsonify({"message": "Category not found"}), 400
 
+    new_price = data.get("price", product.price)
+    if "price" in data and float(new_price) != float(product.price):
+        product.previous_price = product.price
     product.name = data.get("name", product.name)
     product.description = data.get("description", product.description or "")
-    product.price = data.get("price", product.price)
+    product.price = new_price
     product.rating = str(data.get("rating", product.rating))
     product.image = image
     product.sku = data.get("sku", product.sku)
@@ -157,6 +160,7 @@ def serialize_product(product):
         "category": product.category.name if product.category else "",
         "category_id": product.category_id,
         "price": product.price,
+        "previousPrice": product.previous_price,
         "rating": product.rating,
         "description": product.description or "",
         "image": product.image or "",

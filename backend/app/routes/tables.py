@@ -10,11 +10,29 @@ ALLOWED_STATUSES = {"available", "occupied", "reserved", "cleaning"}
 
 
 def serialize_table(table):
+    reservation = next(
+        (
+            item for item in table.reservations
+            if item.status in {"pending", "confirmed"}
+        ),
+        None,
+    )
     return {
         "id": table.id,
         "number": table.table_number,
         "capacity": table.seats,
         "status": table.status.capitalize(),
+        "zone": table.zone,
+        "shape": table.shape,
+        "bgImage": table.bg_image,
+        "reservation": {
+            "guestName": reservation.guest_name or "Guest",
+            "guestEmail": reservation.guest_email or "",
+            "guestPhone": reservation.guest_phone or "",
+            "guests": reservation.guests,
+            "reservedFor": reservation.reserved_for.isoformat(),
+            "status": reservation.status,
+        } if reservation else None,
     }
 
 
@@ -46,6 +64,9 @@ def create_table():
 
     table = RestaurantTable(
         table_number=table_number, seats=seats, status=status
+        , zone=data.get("zone", "Main Dining"),
+        shape=data.get("shape", "square"),
+        bg_image=data.get("bgImage", ""),
     )
     db.session.add(table)
     try:
@@ -85,6 +106,12 @@ def update_table(table_id):
         if status not in ALLOWED_STATUSES:
             return jsonify({"message": "status is not supported"}), 400
         table.status = status
+    if "zone" in data:
+        table.zone = str(data["zone"])
+    if "shape" in data:
+        table.shape = str(data["shape"])
+    if "bgImage" in data:
+        table.bg_image = str(data["bgImage"])
 
     try:
         db.session.commit()

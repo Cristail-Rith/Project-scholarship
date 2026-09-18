@@ -11,18 +11,18 @@
     >
       <!-- Full-Bleed Carousel Background Image -->
       <div class="absolute inset-0 z-0 overflow-hidden">
-        <transition name="bg-fade">
-          <img 
-            :key="currentSlideIndex"
-            :src="slides[currentSlideIndex].bgImage" 
-            :alt="slides[currentSlideIndex].titleHighlight" 
-            class="w-full h-full object-cover object-center scale-105 transition-all duration-1000 brightness-90"
-          />
-        </transition>
+        <img
+          v-for="(slide, index) in slides"
+          :key="slide.bgImage"
+          :src="slide.bgImage"
+          :alt="slide.titleHighlight"
+          class="absolute inset-0 h-full w-full object-cover object-center scale-105 brightness-90 transition-opacity duration-1000"
+          :class="index === currentSlideIndex ? 'opacity-100' : 'opacity-0'"
+        />
 
         <!-- Dark Fine-Dining Gradient Overlay for Contrast -->
-        <div class="absolute inset-0 bg-gradient-to-r from-stone-950/90 via-stone-950/65 to-stone-950/30"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-transparent to-stone-950/50"></div>
+        <div class="absolute inset-0 bg-linear-to-r from-stone-950/90 via-stone-950/65 to-stone-950/30"></div>
+        <div class="absolute inset-0 bg-linear-to-t from-stone-950 via-transparent to-stone-950/50"></div>
       </div>
 
       <!-- Hero Content Container -->
@@ -33,7 +33,7 @@
             <!-- Subtitle -->
             <div class="inline-block">
               <span class="text-xs sm:text-sm font-sans tracking-[0.3em] font-semibold text-[#C59237] uppercase flex items-center gap-2">
-                <span class="w-6 h-[1px] bg-[#C59237]"></span>
+                <span class="w-6 h-px bg-[#C59237]"></span>
                 {{ slides[currentSlideIndex].subtitle }}
               </span>
             </div>
@@ -74,7 +74,8 @@
               <button
                 v-for="(slide, index) in slides"
                 :key="index"
-                @click="goToSlide(index)"
+                type="button"
+                @click.prevent="goToSlide(index)"
                 :class="[
                   'h-2.5 transition-all duration-300 rounded-full focus:outline-none',
                   currentSlideIndex === index ? 'w-10 bg-[#C59237]' : 'w-2.5 bg-stone-500/80 hover:bg-stone-300'

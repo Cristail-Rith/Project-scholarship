@@ -118,6 +118,8 @@
     </section>
 
   </div>
+  <Footer/>
+  <CartSidebar/>
 </template>
 
 <script setup>

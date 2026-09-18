@@ -12,42 +12,43 @@ const showConfirmPassword = ref(false)
 const message = ref('')
 const success = ref(false)
 
-const { register: registerUser } = useAuth()
+const { register: registerUser, login: loginUser } = useAuth()
 
-async function register() {
-  message.value = ''
-  success.value = false
+  async function register() {
+    message.value = ''
+    success.value = false
 
-  if (
-    !form.value.name ||
-    !form.value.email ||
-    !form.value.phone ||
-    !form.value.password ||
-    !form.value.confirmPassword
-  ) {
-    message.value = 'Please fill in all fields.'
-    return
+    if (
+      !form.value.name ||
+      !form.value.email ||
+      !form.value.phone ||
+      !form.value.password ||
+      !form.value.confirmPassword
+    ) {
+      message.value = 'Please fill in all fields.'
+      return
+    }
+
+    if (form.value.password.length < 6) {
+      message.value = 'Password must be at least 6 characters.'
+      return
+    }
+
+    if (form.value.password !== form.value.confirmPassword) {
+      message.value = 'Passwords do not match.'
+      return
+    }
+
+    try {
+      await registerUser(form.value.name, form.value.email, form.value.phone, form.value.password)
+      success.value = true
+      message.value = 'Account created successfully!'
+      await loginUser(form.value.email, form.value.password)
+      await navigateTo('/')
+    } catch (error: any) {
+      message.value = error?.data?.message || 'Unable to create your account.'
+    }
   }
-
-  if (form.value.password.length < 6) {
-    message.value = 'Password must be at least 6 characters.'
-    return
-  }
-
-  if (form.value.password !== form.value.confirmPassword) {
-    message.value = 'Passwords do not match.'
-    return
-  }
-
-  try {
-    await registerUser(form.value.name, form.value.email, form.value.password)
-    success.value = true
-    message.value = 'Account created successfully!'
-    await navigateTo('/login')
-  } catch (error: any) {
-    message.value = error?.data?.message || 'Unable to create your account.'
-  }
-}
 </script>
 
 <template>

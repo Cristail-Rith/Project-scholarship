@@ -82,8 +82,12 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '~/composables/useAuth'
 
 const route = useRoute()
+const router = useRouter()
+const { logout } = useAuth()
 const isOpen = ref(false)
 
 const primaryLinks = [
@@ -102,8 +106,9 @@ const managementLinks = [
 const isActive = (path) => path === '/admin' ? route.path === path : route.path.startsWith(path)
 
 const signOut = () => {
+	logout()
 	isOpen.value = false
-	navigateTo('/login')
+	router.push('/login')
 }
 </script>
 

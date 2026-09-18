@@ -24,16 +24,18 @@
         </div>
 
         <!-- Categories Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8">
-          <div
+        <div v-if="categories.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8">
+          <NuxtLink
             v-for="category in categories"
             :key="category.name"
-            class="flex flex-col items-center group cursor-pointer"
+            :to="'/menu?category=' + encodeURIComponent(category.name)"
+            :aria-label="category.name"
+            class="flex flex-col items-center group hover:text-[#C59237] transition-colors duration-300 focus:outline-none"
           >
             <!-- Circle Image Container -->
             <div class="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full p-1.5 border-2 border-stone-200 group-hover:border-[#C59237] transition-all duration-300 shadow-sm bg-white overflow-hidden mb-4">
               <img
-                :src="category.image"
+                :src="resolveCategoryImage(category)"
                 :alt="category.name"
                 class="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
               />
@@ -42,7 +44,7 @@
             <span class="font-sans text-xs md:text-sm font-semibold tracking-wider text-neutral-800 group-hover:text-[#C59237] transition-colors">
               {{ category.name }}
             </span>
-          </div>
+          </NuxtLink>
         </div>
       </div>
     </section>
@@ -125,39 +127,7 @@
       </div>
     </section>
 
-    <!-- Cart sidebar -->
-    <div v-if="isCartOpen" class="fixed inset-0 z-50 bg-stone-950/60" @click.self="isCartOpen = false">
-      <aside class="ml-auto flex h-full w-full max-w-md flex-col bg-white p-6 text-stone-900 shadow-2xl">
-        <div class="flex items-center justify-between border-b-2 border-stone-900 pb-4">
-          <div>
-            <span class="text-[10px] font-black uppercase tracking-widest text-amber-700">Added to your order</span>
-            <h2 class="font-serif text-2xl">Your Cart</h2>
-          </div>
-          <button type="button" class="text-2xl text-stone-400 hover:text-stone-900" aria-label="Close cart" @click="isCartOpen = false">&times;</button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto py-5">
-          <div v-if="!cartItems.length" class="py-12 text-center text-sm text-stone-500">Your cart is empty.</div>
-          <div v-for="item in cartItems" :key="item.id" class="flex items-center gap-3 border-b border-stone-200 py-4">
-            <img :src="item.image" :alt="item.title" class="h-16 w-16 object-cover" />
-            <div class="min-w-0 flex-1">
-              <button type="button" class="block truncate text-left font-serif hover:text-amber-700" @click="goToProduct(item)">{{ item.title }}</button>
-              <p class="text-xs text-amber-700">${{ (item.price * item.quantity).toFixed(2) }}</p>
-              <div class="mt-2 flex items-center gap-2">
-                <button type="button" class="h-6 w-6 border border-stone-300" @click="updateCartQuantity(item.id, item.quantity - 1)">-</button>
-                <span class="w-5 text-center text-xs">{{ item.quantity }}</span>
-                <button type="button" class="h-6 w-6 border border-stone-300" @click="updateCartQuantity(item.id, item.quantity + 1)">+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="border-t-2 border-stone-900 pt-4">
-          <div class="flex justify-between font-bold"><span>Total</span><span>${{ totalPrice.toFixed(2) }}</span></div>
-          <button type="button" class="mt-4 w-full bg-amber-600 py-3 text-xs font-bold uppercase tracking-widest text-white hover:bg-amber-700" @click="isCartOpen = false">Continue shopping</button>
-        </div>
-      </aside>
-    </div>
+    <CartSidebar/>
   </div>
   <Footer/>
 </template>
@@ -165,43 +135,48 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useProducts } from '~/composables/useProducts'
+import CartSidebar from '~/components/CartSidebar.vue'
+const config = useRuntimeConfig()
 
 const { products } = useProducts()
-const { items: cartItems, addToCart, updateQuantity, totalPrice } = useCart()
+
+const {
+  items: cartItems,
+  addToCart,
+  updateQuantity,
+  totalPrice,
+  isCartOpen
+} = useCart()
+const { data: categoryData } = useFetch('/categories', {
+  baseURL: config.public.apiBase,
+  default: () => []
+})
 
 const activeSlide = ref(0)
 const selectedTab = ref('All Items')
-const isCartOpen = ref(false)
 
-const categories = [
-  {
-    name: 'Starters',
-    image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    name: 'Main Course',
-    image: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281273?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    name: 'Desserts',
-    image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    name: 'Beverages',
-    image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    name: 'Pizza',
-    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    name: 'Chef Specials',
-    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80'
+const categoryFallbackImages = {
+  Starters: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=400&q=80',
+  'Main Course': 'https://images.unsplash.com/photo-1621996346565-e3d5d6281273?auto=format&fit=crop&w=400&q=80',
+  Desserts: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=400&q=80',
+  Beverages: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=400&q=80',
+  Pizza: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80',
+  'Chef Specials': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80'
+}
+
+const categories = computed(() => (categoryData.value || []).filter(category => category.status !== 'Hidden'))
+
+const resolveCategoryImage = (category) => {
+  if (category.image) {
+    return category.image.startsWith('http')
+      ? category.image
+      : `${config.public.apiBase}${category.image}`
   }
-]
+  return categoryFallbackImages[category.name] || categoryFallbackImages['Main Course']
+}
 
 // Filter Tabs
-const filterTabs = ['All Items', 'Starters', 'Main Course', 'Desserts', 'Beverages']
+const filterTabs = computed(() => ['All Items', ...categories.value.map(category => category.name)])
 
 // Recommendation Items
 const items = products
@@ -215,9 +190,13 @@ const goToProduct = (item) => {
   navigateTo(`/product/${item.id}`)
 }
 
+const goToCart = () => {
+  isCartOpen.value = false
+  navigateTo('/cart')
+}
+
 const addItemToCart = (item) => {
   addToCart(item)
-  isCartOpen.value = true
 }
 
 const updateCartQuantity = (id, quantity) => {

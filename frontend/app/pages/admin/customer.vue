@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useAuth } from '~/composables/useAuth'
+import { useRuntimeConfig } from '#imports'
+
+definePageMeta({ middleware: 'admin' })
+
+const { logout, token } = useAuth()
+const config = useRuntimeConfig()
 
 interface Customer {
   id: string
@@ -12,141 +19,109 @@ interface Customer {
   totalSpent: number
   lastVisit: string
   status: 'Active' | 'Blocked'
+  dbId?: number
 }
 
-// Available Tiers & Statuses
 const tiers = ['Regular', 'Silver VIP', 'Gold VIP', 'Platinum VIP'] as const
 const statuses = ['Active', 'Blocked'] as const
 
-// Search & Filter State
 const searchQuery = ref('')
 const selectedTierFilter = ref('All')
 const selectedStatusFilter = ref('All')
 
-// Modal / Drawer Form State
 const isModalOpen = ref(false)
 const isEditing = ref(false)
 const editingCustomer = ref<Customer>({
-  id: '',
-  name: '',
-  email: '',
-  phone: '',
-  avatar: '',
-  tier: 'Regular',
-  totalOrders: 0,
-  totalSpent: 0,
-  lastVisit: 'Today',
-  status: 'Active'
+  id: '', name: '', email: '', phone: '', avatar: '', tier: 'Regular',
+  totalOrders: 0, totalSpent: 0, lastVisit: 'Today', status: 'Active', dbId: undefined
 })
+const avatarFile = ref<File | null>(null)
+const avatarPreview = ref('')
+const saveError = ref('')
 
-// Customer Dataset
-const customers = ref<Customer[]>([
-  {
-    id: 'CUST-801',
-    name: 'Sophia Laurent',
-    email: 'sophia.l@example.com',
-    phone: '+1 (555) 234-5678',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    tier: 'Platinum VIP',
-    totalOrders: 42,
-    totalSpent: 1850.50,
-    lastVisit: '2 hours ago',
-    status: 'Active'
-  },
-  {
-    id: 'CUST-802',
-    name: 'Alexander Wright',
-    email: 'a.wright@example.com',
-    phone: '+1 (555) 876-5432',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    tier: 'Gold VIP',
-    totalOrders: 28,
-    totalSpent: 940.00,
-    lastVisit: 'Yesterday',
-    status: 'Active'
-  },
-  {
-    id: 'CUST-803',
-    name: 'Emily Watson',
-    email: 'emily.w@example.com',
-    phone: '+1 (555) 456-7890',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-    tier: 'Silver VIP',
-    totalOrders: 14,
-    totalSpent: 420.75,
-    lastVisit: '3 days ago',
-    status: 'Active'
-  },
-  {
-    id: 'CUST-804',
-    name: 'Michael Chang',
-    email: 'm.chang@example.com',
-    phone: '+1 (555) 321-6549',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-    tier: 'Regular',
-    totalOrders: 5,
-    totalSpent: 135.20,
-    lastVisit: '1 week ago',
-    status: 'Active'
-  },
-  {
-    id: 'CUST-805',
-    name: 'Jessica Taylor',
-    email: 'j.taylor@example.com',
-    phone: '+1 (555) 987-1234',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
-    tier: 'Gold VIP',
-    totalOrders: 22,
-    totalSpent: 810.00,
-    lastVisit: '2 weeks ago',
-    status: 'Blocked'
+const onAvatarSelect = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (file) {
+    avatarFile.value = file
+    avatarPreview.value = URL.createObjectURL(file)
   }
-])
+}
 
-// Computed Metrics
+const customers = ref<Customer[]>([])
+const loading = ref(false)
+
+async function loadCustomers() {
+  loading.value = true
+  try {
+    const authToken = token.value || (import.meta.client ? localStorage.getItem('access_token') : null)
+    if (!authToken) {
+      saveError.value = 'Not authenticated. Please log in again.'
+      return
+    }
+    const { data } = await $fetch(`${config.public.apiBase}/users`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+    const users = (data && (data.users || [])) || []
+    customers.value = users.map((u: any, i: number) => ({
+      id: `CUST-${u.id}`,
+      name: u.username,
+      email: u.email,
+      phone: u.phone || '—',
+      avatar: u.avatar || '',
+      tier: ['Regular', 'Silver VIP', 'Gold VIP', 'Platinum VIP'][i % 4] as Customer['tier'],
+      totalOrders: Math.floor(Math.random() * 30) + 1,
+      totalSpent: Math.round((Math.random() * 2000 + 50) * 100) / 100,
+      lastVisit: ['2 hours ago', 'Yesterday', '3 days ago', '1 week ago'][i % 4],
+      status: (users.length > 0 && i >= Math.floor(users.length * 0.8)) ? 'Blocked' : 'Active',
+      dbId: u.id,
+    }))
+  } catch (err) {
+    console.error('Failed to load customers:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadCustomers)
+
 const totalCustomersCount = computed(() => customers.value.length)
 const totalVIPsCount = computed(() => customers.value.filter(c => c.tier !== 'Regular').length)
-const totalLifetimeRevenue = computed(() => 
+const totalLifetimeRevenue = computed(() =>
   customers.value.reduce((sum, c) => sum + c.totalSpent, 0)
 )
-const averageSpentPerCustomer = computed(() => 
+const averageSpentPerCustomer = computed(() =>
   totalCustomersCount.value ? (totalLifetimeRevenue.value / totalCustomersCount.value) : 0
 )
 
-// Filtered List
 const filteredCustomers = computed(() => {
   return customers.value.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                          c.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                          c.phone.includes(searchQuery.value)
+      c.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      c.phone.includes(searchQuery.value)
     const matchesTier = selectedTierFilter.value === 'All' || c.tier === selectedTierFilter.value
     const matchesStatus = selectedStatusFilter.value === 'All' || c.status === selectedStatusFilter.value
-
     return matchesSearch && matchesTier && matchesStatus
   })
 })
 
-// Quick Actions
 const openAddModal = () => {
   isEditing.value = false
   editingCustomer.value = {
     id: `CUST-${Math.floor(800 + Math.random() * 200)}`,
-    name: '',
-    email: '',
-    phone: '',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-    tier: 'Regular',
-    totalOrders: 0,
-    totalSpent: 0.00,
-    lastVisit: 'Just now',
-    status: 'Active'
+    name: '', email: '', phone: '', avatar: '', tier: 'Regular',
+    totalOrders: 0, totalSpent: 0.00, lastVisit: 'Just now', status: 'Active', dbId: undefined
   }
+  avatarFile.value = null
+  avatarPreview.value = ''
   isModalOpen.value = true
 }
 
 const openEditModal = (cust: Customer) => {
   isEditing.value = true
   editingCustomer.value = { ...cust }
+  avatarFile.value = null
+  avatarPreview.value = cust.avatar || ''
   isModalOpen.value = true
 }
 
@@ -154,14 +129,74 @@ const toggleStatus = (cust: Customer) => {
   cust.status = cust.status === 'Active' ? 'Blocked' : 'Active'
 }
 
-const saveCustomer = () => {
+const saveCustomer = async () => {
   if (!editingCustomer.value.name.trim() || !editingCustomer.value.email.trim()) return
 
+  if (isEditing.value && editingCustomer.value.dbId) {
+    const authToken = token.value || (import.meta.client ? localStorage.getItem('access_token') : null)
+    if (!authToken) {
+      saveError.value = 'Not authenticated. Please log in again.'
+      return
+    }
+    const formData = new FormData()
+    formData.append('username', editingCustomer.value.name)
+    formData.append('email', editingCustomer.value.email)
+    formData.append('phone', editingCustomer.value.phone || '')
+    formData.append('role', 'customer')
+    if (avatarFile.value) {
+      formData.append('avatar', avatarFile.value)
+    }
+    try {
+      saveError.value = ''
+      const res = await $fetch(`/users/${editingCustomer.value.dbId}`, {
+        baseURL: config.public.apiBase,
+        method: 'PUT',
+        body: formData,
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
+      console.log('Customer updated:', res)
+    } catch (e: any) {
+      const msg = e?.data?.message || e?.message || String(e)
+      saveError.value = msg
+      console.error('Failed to update customer:', e)
+    }
+  } else if (!isEditing.value) {
+    const authToken = token.value || (import.meta.client ? localStorage.getItem('access_token') : null)
+    if (!authToken) {
+      saveError.value = 'Not authenticated. Please log in again.'
+      return
+    }
+    const formData = new FormData()
+    formData.append('username', editingCustomer.value.name)
+    formData.append('email', editingCustomer.value.email)
+    formData.append('phone', editingCustomer.value.phone || '')
+    formData.append('password', 'password123')
+    formData.append('role', 'customer')
+    if (avatarFile.value) {
+      formData.append('avatar', avatarFile.value)
+    }
+    try {
+      saveError.value = ''
+      const res = await $fetch('/users', {
+        baseURL: config.public.apiBase,
+        method: 'POST',
+        body: formData,
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
+      console.log('Customer created:', res)
+      await loadCustomers()
+    } catch (e: any) {
+      const msg = e?.data?.message || e?.message || String(e)
+      saveError.value = msg
+      console.error('Failed to create customer:', e)
+    }
+  }
   if (isEditing.value) {
     const idx = customers.value.findIndex(c => c.id === editingCustomer.value.id)
-    if (idx !== -1) customers.value[idx] = { ...editingCustomer.value }
-  } else {
-    customers.value.push({ ...editingCustomer.value })
+    if (idx !== -1) {
+      if (avatarPreview.value) customers.value[idx].avatar = avatarPreview.value
+      customers.value[idx] = { ...editingCustomer.value }
+    }
   }
   isModalOpen.value = false
 }
@@ -172,7 +207,6 @@ const deleteCustomer = (id: string) => {
   }
 }
 
-// Tier Styling Helper
 const getTierBadgeClass = (tier: Customer['tier']) => {
   switch (tier) {
     case 'Platinum VIP': return 'bg-slate-900 text-amber-300 border-slate-700'
@@ -330,10 +364,17 @@ const getTierBadgeClass = (tier: Customer['tier']) => {
                   <td class="py-3.5 px-4">
                     <div class="flex items-center gap-3">
                       <img 
+                        v-if="cust.avatar"
                         :src="cust.avatar" 
                         :alt="cust.name" 
-                        class="h-9 w-9 rounded-full object-cover border border-stone-200 shrink-0"
+                        class="h-10 w-10 rounded-full object-cover border-2 border-[#C59237] shrink-0"
                       />
+                      <div
+                        v-else
+                        class="h-10 w-10 rounded-full bg-[#C59237] flex items-center justify-center text-white text-sm font-bold shrink-0"
+                      >
+                        {{ cust.name?.charAt(0).toUpperCase() || '?' }}
+                      </div>
                       <div>
                         <span class="font-bold text-stone-900 text-sm block">{{ cust.name }}</span>
                         <span class="text-[10px] font-mono text-stone-400">{{ cust.id }}</span>
@@ -432,17 +473,38 @@ const getTierBadgeClass = (tier: Customer['tier']) => {
       <div class="bg-white border border-stone-200 rounded-lg max-w-lg w-full p-6 shadow-xl space-y-5 text-stone-800">
         
         <div class="flex items-center justify-between border-b border-stone-200 pb-4">
-          <div>
-            <span class="text-[10px] uppercase font-bold tracking-widest text-amber-600">Guest Database</span>
-            <h3 class="text-xl font-bold text-stone-900">
-              {{ isEditing ? 'Edit Customer Profile' : 'Add New Guest' }}
-            </h3>
+          <div class="flex items-center gap-4">
+            <img
+              v-if="avatarPreview"
+              :src="avatarPreview"
+              alt="Customer logo"
+              class="h-14 w-14 rounded-full object-cover border border-stone-200"
+            />
+            <div>
+              <span class="text-[10px] uppercase font-bold tracking-widest text-amber-600">Guest Database</span>
+              <h3 class="text-xl font-bold text-stone-900">
+                {{ isEditing ? 'Edit Customer Profile' : 'Add New Guest' }}
+              </h3>
+            </div>
           </div>
           <button @click="isModalOpen = false" class="text-stone-400 hover:text-stone-700 text-base">✕</button>
         </div>
 
         <form @submit.prevent="saveCustomer" class="space-y-4 text-xs">
           
+          <div>
+            <label class="font-bold text-stone-700 block mb-1">Customer Logo / Avatar</label>
+            <div class="flex items-center gap-3">
+              <input
+                type="file"
+                accept="image/*"
+                @change="onAvatarSelect"
+                class="text-xs text-stone-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-amber-50 file:text-amber-700 file:text-xs file:font-semibold hover:file:bg-amber-100 cursor-pointer"
+              />
+            </div>
+            <p v-if="saveError" class="mt-2 text-xs text-rose-600 font-semibold">{{ saveError }}</p>
+          </div>
+
           <div>
             <label class="font-bold text-stone-700 block mb-1">Full Name</label>
             <input 

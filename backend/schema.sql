@@ -15,7 +15,14 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(80) NOT NULL UNIQUE
+    name VARCHAR(80) NOT NULL UNIQUE,
+    slug VARCHAR(120) NOT NULL DEFAULT '',
+    description TEXT NOT NULL,
+    image VARCHAR(500) NOT NULL DEFAULT '',
+    icon VARCHAR(40) NOT NULL DEFAULT 'utensils',
+    station VARCHAR(80) NOT NULL DEFAULT 'Main Line',
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
+    display_order INT NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS products (
@@ -23,6 +30,7 @@ CREATE TABLE IF NOT EXISTS products (
     name VARCHAR(120) NOT NULL,
     description TEXT,
     price DECIMAL(10, 2) NOT NULL,
+    previous_price DECIMAL(10, 2) NULL,
     rating VARCHAR(10) NOT NULL DEFAULT '0.0',
     image VARCHAR(500) NOT NULL DEFAULT '',
     category_id INT NOT NULL,
@@ -41,6 +49,9 @@ CREATE TABLE IF NOT EXISTS restaurant_tables (
     table_number INT NOT NULL UNIQUE,
     seats INT NOT NULL DEFAULT 2,
     status VARCHAR(20) NOT NULL DEFAULT 'available',
+    zone VARCHAR(40) NOT NULL DEFAULT 'Main Dining',
+    shape VARCHAR(20) NOT NULL DEFAULT 'square',
+    bg_image VARCHAR(500) NOT NULL DEFAULT '',
     CONSTRAINT chk_table_seats CHECK (seats > 0),
     CONSTRAINT chk_table_status CHECK (status IN ('available', 'occupied', 'reserved'))
 ) ENGINE=InnoDB;
@@ -50,6 +61,15 @@ CREATE TABLE IF NOT EXISTS orders (
     user_id INT NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    order_type VARCHAR(20) NOT NULL DEFAULT 'dine-in',
+    payment_method VARCHAR(20) NOT NULL DEFAULT 'cash',
+    delivery_fee DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    notes TEXT NULL,
+    customer_name VARCHAR(160) NULL,
+    customer_email VARCHAR(120) NULL,
+    customer_phone VARCHAR(40) NULL,
+    table_number VARCHAR(20) NULL,
+    delivery_address VARCHAR(255) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_orders_user
         FOREIGN KEY (user_id) REFERENCES users (id)
@@ -59,9 +79,11 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
-    product_id INT NOT NULL,
+    product_id INT NULL,
     quantity INT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
+    product_name VARCHAR(120) NOT NULL DEFAULT '',
+    product_image VARCHAR(500) NOT NULL DEFAULT '',
     CONSTRAINT chk_order_item_quantity CHECK (quantity > 0),
     CONSTRAINT fk_order_items_order
         FOREIGN KEY (order_id) REFERENCES orders (id)
@@ -79,6 +101,9 @@ CREATE TABLE IF NOT EXISTS reservations (
     guests INT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
     notes TEXT,
+    guest_name VARCHAR(160),
+    guest_email VARCHAR(120),
+    guest_phone VARCHAR(40),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_reservation_guests CHECK (guests > 0),
     CONSTRAINT fk_reservations_user

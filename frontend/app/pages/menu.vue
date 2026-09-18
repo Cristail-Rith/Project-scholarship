@@ -3,232 +3,154 @@ import { ref, computed } from 'vue'
 import Caroursel from '~/components/Caroursel.vue'
 import Footer from '~/components/Footer.vue'
 import Navbar from '~/components/Navbar.vue'
+import CartSidebar from '~/components/CartSidebar.vue'
+import { useProducts } from '~/composables/useProducts'
+import { useCart } from '~/composables/useCart'
 
-interface MenuItem {
-  id: string
-  name: string
-  description: string
-  price: number
-  category: 'Appetizers' | 'Mains' | 'Desserts' | 'Drinks'
-  image: string
-  tags: string[]
-  isPopular?: boolean
-}
-
-interface CartItem extends MenuItem {
-  quantity: number
-}
-
-// Active Filter States
-const activeCategory = ref<'All' | 'Appetizers' | 'Mains' | 'Desserts' | 'Drinks'>('All')
+const activeCategory = ref('All')
 const searchQuery = ref('')
-const isCartOpen = ref(false)
+const route = useRoute()
 
-// Sample Menu Data
-const menuItems = ref<MenuItem[]>([
-  {
-    id: 'm1',
-    name: 'Margherita Woodfired Pizza',
-    description: 'San Marzano tomatoes, fresh buffalo mozzarella, organic basil leaves, extra virgin olive oil.',
-    price: 18.50,
-    category: 'Mains',
-    image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=600&q=80',
-    tags: ['Vegetarian'],
-    isPopular: true
-  },
-  {
-    id: 'm2',
-    name: 'Prime Angus Ribeye Steak',
-    description: '12oz grilled Angus beef served with garlic herb butter, roasted rosemary, and sea salt.',
-    price: 42.00,
-    category: 'Mains',
-    image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=600&q=80',
-    tags: ['Gluten-Free', 'Chef Special'],
-    isPopular: true
-  },
-  {
-    id: 'm3',
-    name: 'Truffle Parmesan Fries',
-    description: 'Crispy hand-cut russet potatoes tossed in black truffle oil, fresh parmesan, and chives.',
-    price: 9.50,
-    category: 'Appetizers',
-    image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80',
-    tags: ['Popular']
-  },
-  {
-    id: 'm4',
-    name: 'Artisan Cheese Board',
-    description: 'Selection of aged cheeses, honey comb, dried figs, candied walnuts, and warm crostini.',
-    price: 24.00,
-    category: 'Appetizers',
-    image: 'https://images.unsplash.com/photo-1631379578550-7038263db699?auto=format&fit=crop&w=600&q=80',
-    tags: ['Vegetarian']
-  },
-  {
-    id: 'm5',
-    name: 'House-made Tiramisu',
-    description: 'Espresso-soaked ladyfingers layered with sweet mascarpone cream and dusted with dark cocoa.',
-    price: 8.50,
-    category: 'Desserts',
-    image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=600&q=80',
-    tags: ['Contains Nuts'],
-    isPopular: true
-  },
-  {
-    id: 'm6',
-    name: 'Smoked Old Fashioned',
-    description: 'Small-batch bourbon whiskey, aromatic bitters, orange peel, infused with natural applewood smoke.',
-    price: 15.00,
-    category: 'Drinks',
-    image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=600&q=80',
-    tags: ['Signature']
-  }
+const { products } = useProducts()
+const { items: cart, addToCart, updateQuantity, totalItems: totalCartItems, totalPrice: totalCartPrice, isCartOpen } = useCart()
+const { data: categoryData } = useFetch<any[]>('/categories', {
+  baseURL: useRuntimeConfig().public.apiBase,
+  default: () => []
+})
+
+if (route.query.category) {
+  activeCategory.value = String(route.query.category)
+}
+
+const menuCategories = computed(() => [
+  'All',
+  ...(categoryData.value || [])
+    .filter((category: any) => category.status !== 'Hidden')
+    .map((category: any) => category.name)
 ])
 
-// Shopping Cart State
-const cart = ref<CartItem[]>([])
-
-// Filter Computation
 const filteredMenu = computed(() => {
-  return menuItems.value.filter(item => {
+  return products.value.filter(item => {
     const matchesCategory = activeCategory.value === 'All' || item.category === activeCategory.value
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    const displayName = item.name || item.title
+    const matchesSearch = displayName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                           item.description.toLowerCase().includes(searchQuery.value.toLowerCase())
     return matchesCategory && matchesSearch
   })
 })
 
-// Cart Computations
-const totalCartItems = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0))
-const totalCartPrice = computed(() => cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0))
-
-// Add to Cart Action
-const addToCart = (item: MenuItem) => {
-  const existing = cart.value.find(c => c.id === item.id)
-  if (existing) {
-    existing.quantity += 1
-  } else {
-    cart.value.push({ ...item, quantity: 1 })
-  }
+const goToProduct = (item) => {
+  navigateTo(`/product/${item.id}`)
 }
 
-const updateQuantity = (id: string, delta: number) => {
+const addToMenuItem = (item) => {
+  addToCart(item)
+}
+
+const updateCartQuantity = (id: string | number, delta: number) => {
   const item = cart.value.find(c => c.id === id)
   if (!item) return
-  item.quantity += delta
-  if (item.quantity <= 0) {
-    cart.value = cart.value.filter(c => c.id !== id)
-  }
+  updateQuantity(id, item.quantity + delta)
 }
 </script>
 
 <template>
-<Navbar/>
-<Caroursel/>
-  <section class="bg-white text-stone-900 font-sans selection:bg-amber-600 selection:text-white py-20 px-4 sm:px-6 lg:px-8 relative ">
+  <Navbar/>
+  <section class="bg-stone-50 text-stone-800 font-sans selection:bg-amber-600 selection:text-white py-16 px-4 sm:px-6 lg:px-8 relative">
     
-    <div class="max-w-7xl mx-auto space-y-14">
+    <div class="max-w-7xl mx-auto space-y-12">
       
-      <!-- Styled Editorial Section Header -->
-      <div class="text-center space-y-4 max-w-3xl mx-auto">
+      <!-- Editorial Section Header -->
+      <div class="text-center space-y-3 max-w-3xl mx-auto">
         <div class="flex items-center justify-center gap-3">
-          <span class="h-px w-12 bg-amber-600"></span>
-          <span class="text-amber-700 text-xs font-black uppercase tracking-[0.25em]">Culinary Excellence</span>
-          <span class="h-px w-12 bg-amber-600"></span>
+          <span class="h-px w-10 bg-amber-600/60"></span>
+          <span class="text-amber-700 text-xs font-bold uppercase tracking-[0.2em]">Culinary Excellence</span>
+          <span class="h-px w-10 bg-amber-600/60"></span>
         </div>
-        <h2 class="text-4xl sm:text-5xl font-serif font-black text-stone-900 tracking-tight uppercase">Our Menu</h2>
+        <h2 class="text-3xl sm:text-4xl font-serif font-bold text-stone-800 tracking-tight">Our Menu</h2>
         <p class="text-stone-600 text-xs sm:text-sm leading-relaxed max-w-xl mx-auto font-medium">
           Fresh ingredients, artisanal recipes, and woodfired perfection crafted daily for an unmatched dining experience.
         </p>
       </div>
 
-      <!-- Controls Bar: Sharp Category Navigation & Search Bar -->
-      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 border-b-2 border-stone-900 pb-6">
+      <!-- Controls Bar: Category Navigation & Search Bar -->
+      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
         
-        <!-- Category Buttons with Hover Effects -->
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+        <!-- Category Buttons -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
           <button 
-            v-for="cat in ['All', 'Appetizers', 'Mains', 'Desserts', 'Drinks'] as const" 
+            v-for="cat in menuCategories"
             :key="cat"
             @click="activeCategory = cat"
             :class="activeCategory === cat 
-              ? 'bg-stone-900 text-white border-stone-900 font-extrabold shadow-sm' 
-              : 'bg-white text-stone-700 border-stone-300 hover:border-stone-900 hover:text-stone-900 font-bold'"
-            class="px-5 py-2.5 rounded-none text-xs whitespace-nowrap border-2 transition-all duration-200 uppercase tracking-widest"
+              ? 'bg-amber-600 text-white border-amber-600 font-semibold shadow-xs'
+              : 'bg-white text-stone-600 border-stone-200 hover:border-amber-500 hover:text-stone-800 font-medium'"
+            class="px-4 py-2 rounded-md text-xs whitespace-nowrap border transition-colors duration-200 uppercase tracking-wider"
           >
             {{ cat }}
           </button>
         </div>
 
-        <!-- Styled Search Input -->
-        <div class="relative w-full md:w-80">
+        <!-- Search Input -->
+        <div class="relative w-full md:w-72">
           <input 
             v-model="searchQuery"
             type="text" 
             placeholder="Search menu items..." 
-            class="w-full bg-stone-50 border-2 border-stone-300 text-stone-900 placeholder-stone-400 text-xs rounded-none py-2.5 pl-10 pr-4 focus:outline-none focus:border-amber-600 focus:bg-white transition-all font-medium"
+            class="w-full bg-white border border-stone-200 text-stone-800 placeholder-stone-400 text-xs rounded-md py-2 pl-9 pr-4 focus:outline-none focus:border-amber-600 transition-colors font-medium"
           />
-          <svg class="w-4 h-4 text-stone-500 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          <svg class="w-4 h-4 text-stone-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
         </div>
       </div>
 
-      <!-- Item Grid (Maintained 6 Items) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Item Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div 
           v-for="item in filteredMenu" 
           :key="item.id"
-          class="bg-white border-2 border-stone-200 rounded-none overflow-hidden hover:border-amber-600 transition-all duration-300 flex flex-col justify-between group shadow-xs hover:shadow-xl"
+          class="bg-white border border-stone-200 rounded-lg overflow-hidden hover:border-amber-500/50 transition-all duration-300 flex flex-col justify-between group shadow-xs hover:shadow-md cursor-pointer"
+          @click="goToProduct(item)"
         >
-          <!-- Image Section with Overlay Tags -->
-          <div class="relative h-56 w-full overflow-hidden bg-stone-100 border-b-2 border-stone-100 group-hover:border-amber-600 transition-colors">
+          <!-- Image Section -->
+          <div class="relative h-52 w-full overflow-hidden bg-stone-100">
             <img 
               :src="item.image" 
-              :alt="item.name" 
-              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+              :alt="item.name || item.title"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             />
             <!-- Badges -->
             <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
-              <span 
-                v-if="item.isPopular" 
-                class="bg-amber-600 text-white font-black text-[10px] px-2.5 py-1 rounded-none uppercase tracking-widest border border-amber-700 shadow-xs"
-              >
-                ★ Featured
-              </span>
-              <span 
-                v-for="(tag, idx) in item.tags" 
-                :key="idx"
-                class="bg-stone-900 text-white text-[10px] font-bold px-2.5 py-1 rounded-none uppercase tracking-wider"
-              >
-                {{ tag }}
+              <span class="bg-stone-900/80 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                ★ {{ item.rating }}
               </span>
             </div>
 
             <!-- Floating Price Badge -->
-            <div class="absolute bottom-3 right-3 bg-white border-2 border-stone-900 px-3 py-1 shadow-sm">
-              <span class="font-serif font-black text-stone-900 text-base">${{ item.price.toFixed(2) }}</span>
+            <div class="absolute bottom-3 right-3 bg-white/95 backdrop-blur-xs border border-stone-200 px-2.5 py-1 rounded-md shadow-xs">
+              <span class="font-serif font-bold text-stone-800 text-sm">${{ item.price.toFixed(2) }}</span>
             </div>
           </div>
 
           <!-- Content Section -->
-          <div class="p-6 flex-1 flex flex-col justify-between space-y-6">
-            <div class="space-y-2">
-              <h3 class="text-xl font-bold text-stone-900 group-hover:text-amber-700 transition-colors font-serif leading-tight">
-                {{ item.name }}
+          <div class="p-5 flex-1 flex flex-col justify-between space-y-5">
+            <div class="space-y-1.5">
+              <h3 class="text-lg font-bold text-stone-800 group-hover:text-amber-700 transition-colors font-serif leading-tight">
+                {{ item.name || item.title }}
               </h3>
-              <p class="text-stone-600 text-xs leading-relaxed line-clamp-3 font-medium">
+              <p class="text-stone-500 text-xs leading-relaxed line-clamp-2 font-normal">
                 {{ item.description }}
               </p>
             </div>
 
             <!-- Action Button -->
             <button 
-              @click="addToCart(item)"
-              class="w-full bg-stone-900 hover:bg-amber-600 text-white font-extrabold text-xs py-3.5 rounded-none transition-all duration-200 flex items-center justify-center gap-2 uppercase tracking-widest border-2 border-stone-900 hover:border-amber-600 active:translate-y-0.5"
+              @click="addToMenuItem(item); $event.stopPropagation()"
+              class="w-full bg-stone-800 hover:bg-amber-600 text-white font-semibold text-xs py-2.5 rounded-md transition-colors duration-200 flex items-center justify-center gap-2 uppercase tracking-wider active:bg-amber-700"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
               Add To Order
             </button>
@@ -237,11 +159,11 @@ const updateQuantity = (id: string, delta: number) => {
       </div>
 
       <!-- Filter Empty State -->
-      <div v-if="filteredMenu.length === 0" class="text-center py-20 border-2 border-dashed border-stone-300 space-y-3">
-        <p class="text-stone-500 text-xs font-bold uppercase tracking-widest">No matching dishes found</p>
+      <div v-if="filteredMenu.length === 0" class="text-center py-16 border border-dashed border-stone-300 rounded-lg space-y-3">
+        <p class="text-stone-500 text-xs font-semibold uppercase tracking-wider">No matching dishes found</p>
         <button 
           @click="searchQuery = ''; activeCategory = 'All'" 
-          class="bg-stone-900 text-white text-xs font-bold px-4 py-2 uppercase tracking-wider hover:bg-amber-600 transition-colors"
+          class="bg-stone-800 text-white text-xs font-semibold px-4 py-2 rounded-md uppercase tracking-wider hover:bg-amber-600 transition-colors"
         >
           Reset Search Filters
         </button>
@@ -250,65 +172,19 @@ const updateQuantity = (id: string, delta: number) => {
     </div>
 
     <!-- Floating Order Drawer Button -->
-    <div v-if="totalCartItems > 0" class="fixed bottom-8 right-8 z-40">
+    <div v-if="totalCartItems > 0" class="fixed bottom-6 right-6 z-40">
       <button 
         @click="isCartOpen = true"
-        class="bg-stone-900 hover:bg-amber-600 text-white font-black px-6 py-4 rounded-none border-2 border-stone-900 hover:border-amber-600 shadow-2xl flex items-center gap-4 transition-all duration-200"
+        class="bg-stone-900 hover:bg-amber-600 text-white font-bold px-5 py-3.5 rounded-lg shadow-lg flex items-center gap-3 transition-colors duration-200"
       >
-        <span class="bg-amber-600 text-white text-xs px-2.5 py-1 rounded-none font-mono font-bold">{{ totalCartItems }}</span>
-        <span class="text-xs uppercase tracking-widest">Your Order</span>
-        <span class="font-serif font-black text-amber-400 border-l border-stone-700 pl-3">${{ totalCartPrice.toFixed(2) }}</span>
+        <span class="bg-amber-600 text-white text-xs px-2 py-0.5 rounded font-mono font-semibold">{{ totalCartItems }}</span>
+        <span class="text-xs uppercase tracking-wider">Your Order</span>
+        <span class="font-serif font-bold text-stone-200 border-l border-stone-700 pl-3">${{ totalCartPrice.toFixed(2) }}</span>
       </button>
     </div>
 
-    <!-- Order Side Drawer -->
-    <div v-if="isCartOpen" class="fixed inset-0 z-50 flex justify-end bg-stone-950/60 backdrop-blur-xs">
-      <div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col justify-between p-6 text-stone-900 border-l-4 border-stone-900">
-        
-        <!-- Header -->
-        <div class="flex items-center justify-between border-b-2 border-stone-900 pb-4">
-          <div class="space-y-0.5">
-            <span class="text-[10px] font-black uppercase tracking-widest text-amber-700">Order Summary</span>
-            <h3 class="text-xl font-black text-stone-900 uppercase font-serif">Selected Dishes</h3>
-          </div>
-          <button @click="isCartOpen = false" class="text-stone-400 hover:text-stone-900 text-2xl font-bold">✕</button>
-        </div>
-
-        <!-- Items -->
-        <div class="flex-1 overflow-y-auto py-4 space-y-4 divide-y divide-stone-200">
-          <div v-for="item in cart" :key="item.id" class="pt-4 flex items-center justify-between gap-4">
-            <div class="space-y-1">
-              <h4 class="text-xs font-extrabold text-stone-900 uppercase tracking-wide">{{ item.name }}</h4>
-              <p class="text-xs text-amber-700 font-mono font-bold">${{ (item.price * item.quantity).toFixed(2) }}</p>
-            </div>
-
-            <!-- Quantity Counter -->
-            <div class="flex items-center border-2 border-stone-900 bg-white">
-              <button @click="updateQuantity(item.id, -1)" class="w-8 h-8 flex items-center justify-center text-xs text-stone-900 hover:bg-stone-100 font-black">-</button>
-              <span class="text-xs font-mono font-bold text-stone-900 w-6 text-center">{{ item.quantity }}</span>
-              <button @click="updateQuantity(item.id, 1)" class="w-8 h-8 flex items-center justify-center text-xs text-stone-900 hover:bg-stone-100 font-black">+</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="border-t-2 border-stone-900 pt-4 space-y-4">
-          <div class="flex justify-between items-center text-sm font-black uppercase tracking-wider">
-            <span class="text-stone-600">Subtotal</span>
-            <span class="text-2xl font-serif text-amber-700">${{ totalCartPrice.toFixed(2) }}</span>
-          </div>
-
-          <button 
-            @click="alert('Proceeding to Checkout!')" 
-            class="w-full bg-amber-600 hover:bg-amber-700 text-white font-extrabold py-4 rounded-none text-xs uppercase tracking-widest transition-all duration-200 border-2 border-amber-600"
-          >
-            Checkout Order
-          </button>
-        </div>
-
-      </div>
-    </div>
-
+<!-- Order Side Drawer -->
+    <CartSidebar/>
   </section>
   <Footer/>
 </template>

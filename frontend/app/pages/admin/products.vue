@@ -11,6 +11,8 @@ interface Product {
   category_id: number
   description?: string
   image?: string
+  price: number
+  previousPrice?: number | null
   costPrice: number
   sellingPrice: number
   stockQuantity: number
@@ -33,6 +35,7 @@ const editingProduct = ref<Product>({
   name: '',
   category: 'Main Course',
   category_id: 0,
+  price: 0,
   costPrice: 0,
   sellingPrice: 0,
   stockQuantity: 0,
@@ -53,6 +56,9 @@ const { token } = useAuth()
 
 const getApiError = (error: any, fallback: string) =>
   error?.data?.message || error?.data?.msg || error?.message || fallback
+
+const isExpiredTokenError = (error: any) =>
+  error?.status === 401 || error?.statusCode === 401 || error?.response?.status === 401
 
 const api = <T>(path: string, options: Record<string, any> = {}) => {
   const storedToken = import.meta.client
@@ -145,6 +151,7 @@ const openAddModal = () => {
     name: '',
     category: categories.value[0]?.name || 'Main Course',
     category_id: categories.value[0]?.id || 0,
+    price: 0,
     costPrice: 0,
     sellingPrice: 0,
     stockQuantity: 10,
@@ -212,6 +219,12 @@ const saveProduct = async () => {
     }
     isModalOpen.value = false
   } catch (error: any) {
+    if (isExpiredTokenError(error)) {
+      const { logout } = useAuth()
+      logout()
+      await navigateTo('/login')
+      return
+    }
     saveError.value = getApiError(error, 'Could not save product.')
   } finally {
     isSaving.value = false
@@ -375,13 +388,15 @@ const getProfitMargin = (cost: number, price: number) => {
             <table class="w-full text-left border-collapse text-xs text-stone-700">
               <thead>
                 <tr class="bg-stone-50 border-b border-stone-200 text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  <th scope="col" class="py-3.5 px-4">Image</th>
                   <th scope="col" class="py-3.5 px-4">Item & SKU</th>
                   <th scope="col" class="py-3.5 px-4">Category</th>
                   <th scope="col" class="py-3.5 px-4 text-right">Cost Price</th>
                   <th scope="col" class="py-3.5 px-4 text-right">Selling Price</th>
+                  <th scope="col" class="py-3.5 px-4 text-right">Previous Price</th>
                   <th scope="col" class="py-3.5 px-4 text-right">Margin</th>
-                  <th scope="col" class="py-3.5 px-4 text-center">In Stock</th>
-                  <th scope="col" class="py-3.5 px-4 text-center">Status</th>
+                  <!-- <th scope="col" class="py-3.5 px-4 text-center">In Stock</th>
+                  <th scope="col" class="py-3.5 px-4 text-center">Status</th> -->
                   <th scope="col" class="py-3.5 px-4 text-right pr-6">Actions</th>
                 </tr>
               </thead>
@@ -391,6 +406,22 @@ const getProfitMargin = (cost: number, price: number) => {
                   :key="product.id" 
                   class="hover:bg-stone-50/80 transition-colors group"
                 >
+                  <!-- Product Image -->
+                  <td class="py-3.5 px-4">
+                    <img
+                      v-if="product.image"
+                      :src="resolveImage(product.image)"
+                      :alt="product.name"
+                      class="h-12 w-12 rounded-md border border-stone-200 object-cover"
+                    />
+                    <div
+                      v-else
+                      class="flex h-12 w-12 items-center justify-center rounded-md border border-dashed border-stone-300 bg-stone-50 text-[9px] font-semibold uppercase text-stone-400"
+                    >
+                      No image
+                    </div>
+                  </td>
+
                   <!-- Name & SKU -->
                   <td class="py-3.5 px-4">
                     <div>
@@ -414,6 +445,14 @@ const getProfitMargin = (cost: number, price: number) => {
                     ${{ product.sellingPrice.toFixed(2) }}
                   </td>
 
+                  <!-- Previous Selling Price -->
+                  <td class="py-3.5 px-4 text-right font-mono text-stone-500 whitespace-nowrap">
+                    <span v-if="product.previousPrice != null">
+                      ${{ product.previousPrice.toFixed(2) }}
+                    </span>
+                    <!-- <span v-else class="text-stone-300">--</span> -->
+                  </td>
+
                   <!-- Margin -->
                   <td class="py-3.5 px-4 text-right whitespace-nowrap">
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -422,20 +461,20 @@ const getProfitMargin = (cost: number, price: number) => {
                   </td>
 
                   <!-- Quantity -->
-                  <td class="py-3.5 px-4 text-center font-bold text-stone-800 font-mono">
+                  <!-- <td class="py-3.5 px-4 text-center font-bold text-stone-800 font-mono">
                     {{ product.stockQuantity }}
                     <span class="text-[10px] font-normal text-stone-400 block">(Min: {{ product.reorderLevel }})</span>
                   </td>
 
-                  <!-- Status -->
-                  <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                  Status -->
+                  <!-- <td class="py-3.5 px-4 text-center whitespace-nowrap">
                     <span 
                       :class="getStatusBadgeClass(product.status)"
                       class="px-2.5 py-1 rounded text-[10px] font-bold border block w-max mx-auto"
                     >
                       {{ product.status }}
                     </span>
-                  </td>
+                  </td> -->
 
                   <!-- Actions -->
                   <td class="py-3.5 px-4 text-right pr-6 whitespace-nowrap">
@@ -465,7 +504,7 @@ const getProfitMargin = (cost: number, price: number) => {
 
                 <!-- Empty State -->
                 <tr v-if="filteredProducts.length === 0">
-                  <td colspan="8" class="py-12 text-center text-stone-400 font-normal">
+                  <td colspan="10" class="py-12 text-center text-stone-400 font-normal">
                     No products match your search or filter parameters.
                   </td>
                 </tr>
@@ -520,6 +559,16 @@ const getProfitMargin = (cost: number, price: number) => {
             />
           </div>
 
+          <div>
+            <label class="font-bold text-stone-700 block mb-1">Description</label>
+            <textarea
+              v-model="editingProduct.description"
+              rows="3"
+              placeholder="Describe the ingredients, flavor, or serving details..."
+              class="w-full resize-y rounded-lg border border-stone-300 bg-stone-50 p-2.5 text-stone-900 focus:border-amber-600 focus:bg-white focus:outline-none"
+            ></textarea>
+          </div>
+
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="font-bold text-stone-700 block mb-1">SKU Code</label>
@@ -569,7 +618,7 @@ const getProfitMargin = (cost: number, price: number) => {
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <!-- <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="font-bold text-stone-700 block mb-1">Initial Stock Qty</label>
               <input 
@@ -591,7 +640,7 @@ const getProfitMargin = (cost: number, price: number) => {
                 class="w-full rounded-lg border border-stone-300 bg-stone-50 p-2.5 text-stone-800 focus:border-amber-600 focus:outline-none"
               />
             </div>
-          </div>
+          </div> -->
 
           <div class="pt-4 border-t border-stone-200 flex items-center justify-end gap-3">
             <p v-if="saveError" class="mr-auto text-xs text-rose-600">

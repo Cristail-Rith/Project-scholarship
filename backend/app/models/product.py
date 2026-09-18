@@ -8,6 +8,7 @@ class Product(db.Model):
     name = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text)
     price = db.Column(db.Float, nullable=False)
+    previous_price = db.Column(db.Float, nullable=True)
     rating = db.Column(db.String(10), nullable=False, default="0.0")
     image = db.Column(db.String(500), nullable=False, default="")
     category_id = db.Column(

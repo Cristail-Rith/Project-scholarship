@@ -2,6 +2,8 @@ interface User {
 	id: number
 	username: string
 	email: string
+	phone: string
+	avatar: string
 	role: string
 }
 
@@ -16,17 +18,21 @@ export function useAuth() {
 	const user = useState<User | null>('auth-user', () => null)
 	const token = useState<string | null>('auth-token', () => null)
 
-	if (import.meta.client && !token.value) {
-		token.value = localStorage.getItem('access_token')
-		const storedUser = localStorage.getItem('auth-user')
-		user.value = storedUser ? JSON.parse(storedUser) : null
+	if (import.meta.client) {
+		if (!token.value) {
+			token.value = localStorage.getItem('access_token')
+		}
+		if (!user.value) {
+			const storedUser = localStorage.getItem('auth-user')
+			user.value = storedUser ? JSON.parse(storedUser) : null
+		}
 	}
 
 	async function login(email: string, password: string) {
 		const response = await $fetch<AuthResponse>('/login', {
 			baseURL: config.public.apiBase,
 			method: 'POST',
-			body: { email, password },
+			body: { email, username: email, password },
 		})
 		token.value = response.access_token
 		user.value = response.user
@@ -37,11 +43,11 @@ export function useAuth() {
 		return response
 	}
 
-	async function register(username: string, email: string, password: string) {
+	async function register(username: string, email: string, phone: string, password: string) {
 		return await $fetch<{ message: string; user: User }>('/register', {
 			baseURL: config.public.apiBase,
 			method: 'POST',
-			body: { username, email, password },
+			body: { username, email, phone, password },
 		})
 	}
 

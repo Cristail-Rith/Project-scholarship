@@ -1,3 +1,4 @@
+
 import { computed } from 'vue'
 
 interface Product {
@@ -14,6 +15,7 @@ interface Product {
 
 export function useProducts() {
   const config = useRuntimeConfig()
+
   const { data, pending, error, refresh } = useFetch<Product[]>('/products', {
     baseURL: config.public.apiBase,
     default: () => [],
@@ -22,14 +24,18 @@ export function useProducts() {
   const products = computed(() =>
     (data.value ?? []).map((product) => ({
       ...product,
-      image: product.image && !product.image.startsWith('http')
-        ? `${config.public.apiBase}${product.image}`
-        : product.image,
+      image:
+        product.image && !product.image.startsWith('http')
+          ? `${config.public.apiBase}${product.image}`
+          : product.image,
     })),
   )
+
   const searchQuery = useState('product-search-query', () => '')
+
   const filteredProducts = computed(() => {
     const query = searchQuery.value.trim().toLowerCase()
+
     if (!query) return []
 
     return products.value.filter((product) =>
@@ -48,3 +54,4 @@ export function useProducts() {
     refresh,
   }
 }
+

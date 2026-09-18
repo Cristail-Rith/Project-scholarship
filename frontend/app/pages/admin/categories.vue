@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+
+definePageMeta({ middleware: 'admin' })
 
 interface Category {
   id: string
@@ -7,7 +9,8 @@ interface Category {
   slug: string
   description: string
   itemCount: number
-  icon: string // Storing icon key/identifier instead of emoji
+  icon: string
+  image: string
   station: 'Kitchen Grill' | 'Pizza Oven' | 'Bar & Drinks' | 'Pastry & Cold' | 'Main Line'
   status: 'Active' | 'Hidden'
   displayOrder: number
@@ -29,6 +32,44 @@ const availableIcons = [
 const searchQuery = ref('')
 const selectedStationFilter = ref('All')
 
+// Deep link from homepage categories (e.g. /admin/categories?category=Pizza)
+const route = useRoute()
+const categoryStationMap: Record<string, string> = {
+  Starters: 'Pastry & Cold',
+  'Main Course': 'Kitchen Grill',
+  Desserts: 'Pastry & Cold',
+  Beverages: 'Bar & Drinks',
+  Pizza: 'Pizza Oven',
+  'Chef Specials': 'Main Line'
+}
+const homeCategory = route.query.category
+const homeCategoryName = Array.isArray(homeCategory) ? homeCategory[0] : homeCategory
+if (homeCategoryName && categoryStationMap[homeCategoryName]) {
+  selectedStationFilter.value = categoryStationMap[homeCategoryName]
+}
+
+const config = useRuntimeConfig()
+const { token } = useAuth()
+const saveError = ref('')
+const loadError = ref('')
+const isSaving = ref(false)
+
+const api = <T>(path: string, options: Record<string, any> = {}) => {
+  const storedToken = import.meta.client
+    ? localStorage.getItem('access_token')
+    : null
+  const authToken = token.value || storedToken
+
+  return $fetch<T>(path, {
+    baseURL: config.public.apiBase,
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    },
+  })
+}
+
 // Drawer / Modal Form State
 const isDrawerOpen = ref(false)
 const isEditing = ref(false)
@@ -39,91 +80,23 @@ const editingCategory = ref<Category>({
   description: '',
   itemCount: 0,
   icon: 'utensils',
+  image: '',
   station: 'Main Line',
   status: 'Active',
   displayOrder: 1
 })
+const selectedCategoryFile = ref<File | null>(null)
+const categoryImagePreview = ref('')
+
+const resolveCategoryImage = (image: string) => {
+  if (!image) return ''
+  return image.startsWith('http') || image.startsWith('blob:')
+    ? image
+    : `${config.public.apiBase}${image}`
+}
 
 // Categories Reactive Dataset
-const categories = ref<Category[]>([
-  {
-    id: 'CAT-101',
-    name: 'Artisan Pizzas',
-    slug: 'artisan-pizzas',
-    description: 'Wood-fired sourdough pizzas crafted with organic flour and imported mozzarella.',
-    itemCount: 12,
-    icon: 'pizza',
-    station: 'Pizza Oven',
-    status: 'Active',
-    displayOrder: 1
-  },
-  {
-    id: 'CAT-102',
-    name: 'Gourmet Burgers',
-    slug: 'gourmet-burgers',
-    description: 'Prime Angus beef burgers served on toasted brioche buns with signature sauces.',
-    itemCount: 8,
-    icon: 'burger',
-    station: 'Kitchen Grill',
-    status: 'Active',
-    displayOrder: 2
-  },
-  {
-    id: 'CAT-103',
-    name: 'Prime Steaks & Grills',
-    slug: 'prime-steaks',
-    description: 'Dry-aged steaks grilled over charcoal with house herb butter.',
-    itemCount: 6,
-    icon: 'steak',
-    station: 'Kitchen Grill',
-    status: 'Active',
-    displayOrder: 3
-  },
-  {
-    id: 'CAT-104',
-    name: 'Craft Cocktails & Wines',
-    slug: 'cocktails-wines',
-    description: 'Signature mixologist cocktails, vintage wines, and craft draft beers.',
-    itemCount: 24,
-    icon: 'drink',
-    station: 'Bar & Drinks',
-    status: 'Active',
-    displayOrder: 4
-  },
-  {
-    id: 'CAT-105',
-    name: 'Pastas & Risottos',
-    slug: 'pastas-risottos',
-    description: 'Handmade fresh egg pastas and slow-cooked Arborio rice dishes.',
-    itemCount: 10,
-    icon: 'pasta',
-    station: 'Main Line',
-    status: 'Active',
-    displayOrder: 5
-  },
-  {
-    id: 'CAT-106',
-    name: 'Desserts & Sweets',
-    slug: 'desserts',
-    description: 'House-made gelatos, soufflés, and artisanal pastry creations.',
-    itemCount: 9,
-    icon: 'cake',
-    station: 'Pastry & Cold',
-    status: 'Active',
-    displayOrder: 6
-  },
-  {
-    id: 'CAT-107',
-    name: 'Seasonal Appetizers',
-    slug: 'seasonal-appetizers',
-    description: 'Light starters, fresh oysters, and shared tapas plates.',
-    itemCount: 14,
-    icon: 'salad',
-    station: 'Pastry & Cold',
-    status: 'Hidden',
-    displayOrder: 7
-  }
-])
+const categories = ref<Category[]>([])
 
 // Computed Metrics
 const totalCategories = computed(() => categories.value.length)
@@ -142,6 +115,24 @@ const filteredCategories = computed(() => {
     .sort((a, b) => a.displayOrder - b.displayOrder)
 })
 
+function categoryIcon(name: string): string {
+  const lower = name.toLowerCase()
+  if (lower.includes('pizza')) return 'pizza'
+  if (lower.includes('dessert')) return 'cake'
+  if (lower.includes('drink') || lower.includes('beverage') || lower.includes('bar')) return 'drink'
+  if (lower.includes('starter') || lower.includes('appetizer')) return 'salad'
+  return 'utensils'
+}
+
+async function loadCategories() {
+  try {
+    const data = await api<Category[]>('/categories')
+    categories.value = data.map(c => ({ ...c, icon: c.icon || categoryIcon(c.name) }))
+  } catch (error: any) {
+    loadError.value = error?.data?.message || error?.data?.msg || error?.message || 'Could not load categories.'
+  }
+}
+
 // Quick Actions
 const openAddModal = () => {
   isEditing.value = false
@@ -152,47 +143,127 @@ const openAddModal = () => {
     description: '',
     itemCount: 0,
     icon: 'utensils',
+    image: '',
     station: 'Main Line',
     status: 'Active',
     displayOrder: categories.value.length + 1
   }
+  selectedCategoryFile.value = null
+  categoryImagePreview.value = ''
+  saveError.value = ''
   isDrawerOpen.value = true
 }
 
 const openEditModal = (cat: Category) => {
   isEditing.value = true
-  editingCategory.value = { ...cat }
+  editingCategory.value = { ...cat, icon: cat.icon || categoryIcon(cat.name) }
+  selectedCategoryFile.value = null
+  categoryImagePreview.value = resolveCategoryImage(cat.image || '')
+  saveError.value = ''
   isDrawerOpen.value = true
 }
 
-const toggleStatus = (cat: Category) => {
+const selectCategoryImage = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0] || null
+  if (!file) return
+  selectedCategoryFile.value = file
+  categoryImagePreview.value = URL.createObjectURL(file)
+}
+
+const toggleStatus = async (cat: Category) => {
   cat.status = cat.status === 'Active' ? 'Hidden' : 'Active'
+  try {
+    await api(`/categories/${cat.id}`, { method: 'PUT', body: { status: cat.status } })
+  } catch (error: any) {
+    cat.status = cat.status === 'Active' ? 'Hidden' : 'Active'
+    saveError.value = getApiError(error, 'Could not update status.')
+  }
 }
 
-const saveCategory = () => {
-  if (!editingCategory.value.name.trim()) return
-
-  // Auto-generate slug if empty
-  if (!editingCategory.value.slug) {
-    editingCategory.value.slug = editingCategory.value.name.toLowerCase().replace(/\s+/g, '-')
+const saveCategory = async () => {
+  saveError.value = ''
+  isSaving.value = true
+  if (!editingCategory.value.name.trim()) {
+    saveError.value = 'Category name is required.'
+    isSaving.value = false
+    return
   }
 
-  if (isEditing.value) {
-    const idx = categories.value.findIndex(c => c.id === editingCategory.value.id)
-    if (idx !== -1) categories.value[idx] = { ...editingCategory.value }
-  } else {
-    categories.value.push({ ...editingCategory.value })
+  const payload: Record<string, any> = {
+    name: editingCategory.value.name.trim(),
+    slug: editingCategory.value.slug || editingCategory.value.name.toLowerCase().replace(/\s+/g, '-'),
+    description: editingCategory.value.description || '',
+    station: editingCategory.value.station,
+    status: editingCategory.value.status,
+    display_order: editingCategory.value.displayOrder,
+    icon: editingCategory.value.icon,
   }
-  isDrawerOpen.value = false
+  if (editingCategory.value.image) {
+    payload.image = editingCategory.value.image
+  }
+  if (selectedCategoryFile.value) {
+    const formData = new FormData()
+    formData.append('name', payload.name)
+    formData.append('slug', payload.slug)
+    formData.append('description', payload.description)
+    formData.append('station', payload.station)
+    formData.append('status', payload.status)
+    formData.append('display_order', String(payload.display_order))
+    formData.append('icon', payload.icon)
+    formData.append('image', selectedCategoryFile.value)
+    try {
+      if (isEditing.value) {
+        await api(`/categories/${editingCategory.value.id}`, { method: 'PUT', body: formData })
+      } else {
+        const created = await api<Category>('/categories', { method: 'POST', body: formData })
+        categories.value.push({ ...created, icon: created.icon || categoryIcon(created.name) })
+      }
+      isDrawerOpen.value = false
+      await loadCategories()
+      return
+    } catch (error: any) {
+      saveError.value = getApiError(error, 'Could not save category.')
+      isSaving.value = false
+      return
+    }
+  }
+
+  try {
+    if (isEditing.value) {
+      await api(`/categories/${editingCategory.value.id}`, { method: 'PUT', body: payload })
+    } else {
+      const created = await api<Category>('/categories', { method: 'POST', body: payload })
+      categories.value.push({ ...created, icon: created.icon || categoryIcon(created.name) })
+    }
+    isDrawerOpen.value = false
+    await loadCategories()
+  } catch (error: any) {
+    saveError.value = getApiError(error, 'Could not save category.')
+  } finally {
+    isSaving.value = false
+  }
 }
 
-const deleteCategory = (id: string) => {
+const deleteCategory = async (id: string) => {
   if (confirm('Are you sure you want to delete this category? Menu items assigned to it may need re-assigning.')) {
-    categories.value = categories.value.filter(c => c.id !== id)
+    try {
+      await api(`/categories/${id}`, { method: 'DELETE' })
+      categories.value = categories.value.filter(c => c.id !== id)
+    } catch (error: any) {
+      saveError.value = getApiError(error, 'Could not delete category.')
+    }
   }
 }
-</script>
 
+function getApiError(error: any, fallback: string) {
+  return error?.data?.message || error?.data?.msg || error?.message || fallback
+}
+
+onMounted(() => {
+  loadCategories()
+})
+</script>
 <template>
   <div class="min-h-screen bg-stone-100 text-stone-800 font-sans selection:bg-amber-100">
     <AdminSidebar />
@@ -323,8 +394,15 @@ const deleteCategory = (id: string) => {
                   <!-- Category Info (Icon, Name, Slug, Description) -->
                   <td class="py-3.5 px-4">
                     <div class="flex items-center gap-3">
-                      <!-- Vector Icon Display -->
-                      <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-stone-100 border border-stone-200 text-stone-700 shrink-0">
+                      <!-- Category Image -->
+                      <img 
+                        v-if="cat.image"
+                        :src="resolveCategoryImage(cat.image)"
+                        :alt="cat.name"
+                        class="h-9 w-9 rounded-md object-cover shrink-0 border border-stone-200"
+                      />
+                      <div v-else class="flex h-9 w-9 items-center justify-center rounded-lg bg-stone-100 border border-stone-200 text-stone-700 shrink-0">
+                        <!-- Vector Icon Display -->
                         <svg v-if="cat.icon === 'pizza'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 2L2 22h20L12 2zM12 6l5 10H7l5-10z"/>
                         </svg>
@@ -449,6 +527,22 @@ const deleteCategory = (id: string) => {
 
         <form @submit.prevent="saveCategory" class="space-y-4 text-xs">
           
+          <div>
+            <label class="font-bold text-stone-700 block mb-1">Category Image</label>
+            <input 
+              type="file" 
+              accept="image/jpeg,image/png,image/webp,image/gif" 
+              @change="selectCategoryImage"
+              class="w-full rounded-lg border border-stone-300 bg-stone-50 p-2 text-xs text-stone-800 file:mr-3 file:rounded-md file:border-0 file:bg-amber-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold"
+            />
+            <img 
+              v-if="categoryImagePreview"
+              :src="categoryImagePreview"
+              alt="Category preview"
+              class="mt-2 h-24 w-24 rounded-md object-cover border border-stone-200"
+            />
+          </div>
+
           <div>
             <label class="font-bold text-stone-700 block mb-1">Select Vector Icon</label>
             <div class="grid grid-cols-4 gap-2">

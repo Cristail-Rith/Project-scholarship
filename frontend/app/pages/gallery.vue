@@ -157,10 +157,15 @@
     </transition>
 
   </div>
+  <CartSidebar/>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import CartSidebar from '~/components/CartSidebar.vue'
+import { useCart } from '~/composables/useCart'
+
+useCart()
 
 const activeCategory = ref('All')
 const lightboxOpen = ref(false)

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import CartSidebar from '~/components/CartSidebar.vue'
 
 const route = useRoute()
 const { products, pending, error } = useProducts()
@@ -31,11 +32,10 @@ const decreaseQty = () => {
 
 const addProductToCart = () => {
   if (!product.value) return
-  
+
   for (let i = 0; i < quantity.value; i++) {
     addToCart(product.value)
   }
-
   addedToast.value = true
   setTimeout(() => {
     addedToast.value = false
@@ -283,6 +283,7 @@ const toggleAccordion = (section: string) => {
       </div>
     </div>
   </div>
+  <CartSidebar/>
 </template>
 
 <style scoped>

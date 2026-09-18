@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useAuth } from '~/composables/useAuth'
+import { useRuntimeConfig } from '#imports'
+
+definePageMeta({ middleware: 'admin' })
 
 interface OrderItem {
   name: string
   quantity: number
   price: number
-  notes?: string
 }
 
 interface Order {
@@ -18,6 +21,32 @@ interface Order {
   totalAmount: number
   status: 'Pending' | 'Preparing' | 'Ready' | 'Delivered' | 'Cancelled'
   createdAt: string
+  dbId?: number
+}
+
+interface BackendOrder {
+  id: number
+  user_id: number
+  total_price: number
+  status: string
+  order_type: string
+  payment_method: string
+  delivery_fee: number
+  notes: string
+  customer_name: string
+  customer_email: string
+  customer_phone: string
+  table_number: string
+  delivery_address: string
+  created_at: string
+  items: Array<{
+    id: number
+    product_id: number
+    product_name: string
+    product_image: string
+    quantity: number
+    price: number
+  }>
 }
 
 // Filter States
@@ -40,82 +69,63 @@ const editingOrder = ref<Order>({
   createdAt: 'Just now'
 })
 
-// Orders Reactive Dataset
-const orders = ref<Order[]>([
-  {
-    id: 'ORD-9001',
-    customerName: 'Sophia Laurent',
-    orderType: 'Dine-In',
-    tableNumber: 'Table 04',
-    station: 'Pizza Oven',
-    items: [
-      { name: 'Margherita Woodfired Pizza', quantity: 2, price: 18.50 },
-      { name: 'Aperol Spritz', quantity: 2, price: 12.00 }
-    ],
-    totalAmount: 61.00,
-    status: 'Preparing',
-    createdAt: '5 mins ago'
-  },
-  {
-    id: 'ORD-9002',
-    customerName: 'Marcus Vance',
-    orderType: 'Takeout',
-    station: 'Kitchen Grill',
-    items: [
-      { name: 'Prime Angus Ribeye Steak', quantity: 1, price: 42.00 },
-      { name: 'Truffle Parmesan Fries', quantity: 1, price: 9.50 }
-    ],
-    totalAmount: 51.50,
-    status: 'Pending',
-    createdAt: '12 mins ago'
-  },
-  {
-    id: 'ORD-9003',
-    customerName: 'David Chen',
-    orderType: 'Dine-In',
-    tableNumber: 'Table 12',
-    station: 'Bar & Drinks',
-    items: [
-      { name: 'Smoked Old Fashioned', quantity: 3, price: 15.00 },
-      { name: 'Artisan Cheese Board', quantity: 1, price: 24.00 }
-    ],
-    totalAmount: 69.00,
-    status: 'Ready',
-    createdAt: '25 mins ago'
-  },
-  {
-    id: 'ORD-9004',
-    customerName: 'Emily Watson',
-    orderType: 'Delivery',
-    station: 'Pastry & Cold',
-    items: [
-      { name: 'House-made Tiramisu', quantity: 2, price: 8.50 },
-      { name: 'Iced Vanilla Latte', quantity: 2, price: 5.50 }
-    ],
-    totalAmount: 28.00,
-    status: 'Delivered',
-    createdAt: '1 hour ago'
-  },
-  {
-    id: 'ORD-9005',
-    customerName: 'Alexander Wright',
-    orderType: 'Dine-In',
-    tableNumber: 'Table 02',
-    station: 'Kitchen Grill',
-    items: [
-      { name: 'Gourmet Wagyu Burger', quantity: 1, price: 22.00 }
-    ],
-    totalAmount: 22.00,
-    status: 'Cancelled',
-    createdAt: '2 hours ago'
+const orders = ref<Order[]>([])
+const loading = ref(false)
+const error = ref('')
+const { token } = useAuth()
+const config = useRuntimeConfig()
+
+const statusMap: Record<string, Order['status']> = {
+  pending: 'Pending',
+  preparing: 'Preparing',
+  ready: 'Ready',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+}
+
+async function fetchOrders() {
+  loading.value = true
+  try {
+    const authToken = token.value || (import.meta.client ? localStorage.getItem('access_token') : null)
+    if (!authToken) {
+      error.value = 'Not authenticated. Please log in again.'
+      return
+    }
+    const res = await $fetch<BackendOrder[]>('/orders', {
+      baseURL: config.public.apiBase,
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+    const stationPool: Order['station'][] = ['Main Line', 'Kitchen Grill', 'Pizza Oven', 'Pastry & Cold', 'Bar & Drinks']
+    orders.value = res.map((o) => ({
+      id: `#ORD-${o.id}`,
+      customerName: o.customer_name || `User ${o.user_id}`,
+      orderType: (['Dine-In', 'Takeout', 'Delivery'] as const)[
+        o.order_type === 'dine-in' ? 0 : o.order_type === 'takeout' ? 1 : o.order_type === 'delivery' ? 2 : 0
+      ],
+      tableNumber: o.table_number || '',
+      station: stationPool[o.id % stationPool.length],
+      items: o.items.map(item => ({
+        name: item.product_name || `Product #${item.product_id}`,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      totalAmount: o.total_price,
+      status: statusMap[o.status?.toLowerCase()] || 'Pending',
+      createdAt: o.created_at ? new Date(o.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now',
+      dbId: o.id,
+    }))
+  } catch (e) {
+    error.value = (e as Error).message || 'Failed to load orders'
+  } finally {
+    loading.value = false
   }
-])
+}
 
 // Metrics Computations
 const totalOrdersCount = computed(() => orders.value.length)
 const pendingCount = computed(() => orders.value.filter(o => o.status === 'Pending').length)
 const preparingCount = computed(() => orders.value.filter(o => o.status === 'Preparing').length)
-const totalSalesVolume = computed(() => 
+const totalSalesVolume = computed(() =>
   orders.value
     .filter(o => o.status !== 'Cancelled')
     .reduce((sum, o) => sum + o.totalAmount, 0)
@@ -139,12 +149,20 @@ const cycleStatus = (order: Order) => {
   const statusFlow: Order['status'][] = ['Pending', 'Preparing', 'Ready', 'Delivered', 'Cancelled']
   const currentIndex = statusFlow.indexOf(order.status)
   order.status = statusFlow[(currentIndex + 1) % statusFlow.length]
+  if (order.dbId) {
+    $fetch(`/orders/${order.dbId}`, {
+      baseURL: config.public.apiBase,
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token.value}` },
+      body: { status: order.status.toLowerCase() },
+    }).catch(() => {})
+  }
 }
 
 const openAddModal = () => {
   isEditing.value = false
   editingOrder.value = {
-    id: `ORD-${Math.floor(9000 + Math.random() * 1000)}`,
+    id: `#ORD-${Math.floor(9000 + Math.random() * 1000)}`,
     customerName: '',
     orderType: 'Dine-In',
     tableNumber: 'Table 1',
@@ -173,23 +191,76 @@ const removeItemFromOrder = (index: number) => {
   }
 }
 
-const saveOrder = () => {
+const saveOrder = async () => {
   if (!editingOrder.value.customerName.trim()) return
-
-  // Recalculate Total
   editingOrder.value.totalAmount = editingOrder.value.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
-  if (isEditing.value) {
-    const idx = orders.value.findIndex(o => o.id === editingOrder.value.id)
-    if (idx !== -1) orders.value[idx] = { ...editingOrder.value }
+  if (isEditing.value && editingOrder.value.dbId) {
+    try {
+      await $fetch(`/orders/${editingOrder.value.dbId}`, {
+        baseURL: config.public.apiBase,
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token.value}` },
+        body: { status: editingOrder.value.status.toLowerCase() },
+      })
+      const idx = orders.value.findIndex(o => o.id === editingOrder.value.id)
+      if (idx !== -1) orders.value[idx] = { ...editingOrder.value }
+    } catch (e) {
+      console.error('Failed to update order:', e)
+    }
   } else {
-    orders.value.unshift({ ...editingOrder.value })
+    try {
+      const items = editingOrder.value.items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      }))
+      const res = await $fetch('/orders', {
+        baseURL: config.public.apiBase,
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token.value}`, 'Content-Type': 'application/json' },
+        body: {
+          items,
+          order_type: 'dine-in',
+          payment_method: 'cash',
+          customer_name: editingOrder.value.customerName,
+          notes: '',
+        },
+      })
+      const newOrder: Order = {
+        id: `#ORD-${(res as any)?.id || Math.floor(9000 + Math.random() * 1000)}`,
+        customerName: editingOrder.value.customerName,
+        orderType: editingOrder.value.orderType,
+        tableNumber: editingOrder.value.tableNumber,
+        station: editingOrder.value.station,
+        items: editingOrder.value.items,
+        totalAmount: editingOrder.value.totalAmount,
+        status: 'Pending',
+        createdAt: 'Just now',
+        dbId: (res as any)?.id,
+      }
+      orders.value.unshift(newOrder)
+    } catch (e) {
+      console.error('Failed to create order:', e)
+    }
   }
   isModalOpen.value = false
 }
 
-const deleteOrder = (id: string) => {
+const deleteOrder = async (id: string) => {
   if (confirm('Are you sure you want to cancel and remove this ticket?')) {
+    const order = orders.value.find(o => o.id === id)
+    if (order?.dbId) {
+      try {
+        await $fetch(`/orders/${order.dbId}`, {
+          baseURL: config.public.apiBase,
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token.value}` },
+        })
+      } catch (e) {
+        console.error('Failed to delete order:', e)
+      }
+    }
     orders.value = orders.value.filter(o => o.id !== id)
   }
 }
@@ -212,6 +283,8 @@ const getTypeBadgeClass = (type: Order['orderType']) => {
     case 'Delivery': return 'bg-indigo-50 text-indigo-700 border-indigo-200'
   }
 }
+
+onMounted(fetchOrders)
 </script>
 
 <template>

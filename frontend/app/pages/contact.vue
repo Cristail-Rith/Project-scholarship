@@ -25,7 +25,7 @@
                 d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
               />
             </svg>
-            +1 234 567 8900
+            <a href="tel:+85516555091">+855 16555091</a>
           </a>
 
           <a
@@ -40,25 +40,25 @@
                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
-            hello@flavoria.com
+            <a href="mailto:sovvanrith72@gmail.com">sovvanrith72@gmail.com</a>
           </a>
         </div>
 
         <div class="text-[#D5A64C]">
-          Complimentary delivery on orders above $50
+          <NuxtLink to="/menu">Complimentary delivery on orders above $50</NuxtLink>
         </div>
 
         <div class="flex items-center gap-4">
           <span class="text-[#81786D]">Follow</span>
 
           <div class="flex gap-3">
-            <a href="#" aria-label="Facebook" class="hover:text-[#D5A64C] transition-colors">
+            <a href="https://web.facebook.com/me/" aria-label="Facebook" class="hover:text-[#D5A64C] transition-colors">
               <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                 <path d="M9 8H6v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.374 14.5 5 15.5 5H18V0h-3.808C10.592 0 9 1.583 9 4.615V8z"/>
               </svg>
             </a>
 
-            <a href="#" aria-label="Instagram" class="hover:text-[#D5A64C] transition-colors">
+            <a href="https://www.instagram.com/rithifgemini/" aria-label="Instagram" class="hover:text-[#D5A64C] transition-colors">
               <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                 <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.07 4.849-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.79 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
               </svg>
@@ -71,106 +71,7 @@
     <!-- =========================================================
          NAVIGATION
     ========================================================== -->
-    <header
-      class="sticky top-0 z-50 bg-[#F8F5EF]/95 backdrop-blur-xl py-5 border-b border-[#29251F]/10"
-    >
-      <nav class="max-w-[1400px] mx-auto px-6 lg:px-10 h-[82px] flex items-center justify-between">
-        <!-- Mobile menu -->
-        <button
-          @click="mobileMenuOpen = !mobileMenuOpen"
-          class="lg:hidden w-10 h-10 flex items-center justify-center rounded-full border border-[#29251F]/10 hover:border-[#C59237] transition-colors"
-          aria-label="Toggle Menu"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M4 7h16M4 12h16M4 17h16"
-            />
-          </svg>
-        </button>
-
-        <!-- Left navigation -->
-        <div
-          class="hidden lg:flex items-center gap-9 font-sans text-[12px] font-semibold tracking-[0.24em] text-[#514A42] uppercase"
-        >
-          <NuxtLink to="/" class="nav-link">Home</NuxtLink>
-          <NuxtLink to="/menu" class="nav-link">Menu</NuxtLink>
-          <NuxtLink to="/about" class="nav-link">About</NuxtLink>
-        </div>
-
-        <!-- Logo -->
-        <NuxtLink
-          to="/"
-          class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center group"
-        >
-          <div
-            class="w-9 h-9 rounded-full border border-[#C59237]/60 flex items-center justify-center mb-1.5 group-hover:border-[#C59237] group-hover:rotate-45 transition-all duration-500"
-          >
-            <svg
-              class="w-4 h-4 text-[#C59237] group-hover:-rotate-45 transition-transform duration-500"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
-            </svg>
-          </div>
-
-          <span class="font-serif text-[22px] md:text-[25px] tracking-[0.28em] text-[#201D19] leading-none">
-            FLAVORIA
-          </span>
-
-          <span class="text-[7px] md:text-[8px] tracking-[0.42em] text-[#A27B38] uppercase font-sans mt-2">
-            Fine Dining
-          </span>
-        </NuxtLink>
-
-        <!-- Right navigation -->
-        <div class="flex items-center gap-5 lg:gap-9 ml-auto">
-          <div
-            class="hidden lg:flex items-center gap-9 font-sans text-[12px] font-semibold tracking-[0.24em] text-[#514A42] uppercase"
-          >
-            <NuxtLink to="/reservation" class="nav-link">Reservation</NuxtLink>
-            <NuxtLink to="/contact" class="nav-link active-link">Contact</NuxtLink>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <NuxtLink
-              to="/login"
-              class="nav-icon"
-              aria-label="Account"
-            >
-              <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1.6"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </NuxtLink>
-          </div>
-        </div>
-      </nav>
-
-      <!-- Mobile navigation -->
-      <transition name="mobile-menu">
-        <div
-          v-if="mobileMenuOpen"
-          class="lg:hidden border-t border-[#29251F]/10 bg-[#F8F5EF] px-6 py-6"
-        >
-          <div class="flex flex-col gap-5 font-sans text-[11px] font-semibold tracking-[0.25em] uppercase">
-            <NuxtLink @click="mobileMenuOpen = false" to="/" class="mobile-nav-link">Home</NuxtLink>
-            <NuxtLink @click="mobileMenuOpen = false" to="/menu" class="mobile-nav-link">Menu</NuxtLink>
-            <NuxtLink @click="mobileMenuOpen = false" to="/about" class="mobile-nav-link">About</NuxtLink>
-            <NuxtLink @click="mobileMenuOpen = false" to="/reservation" class="mobile-nav-link">Reservation</NuxtLink>
-            <NuxtLink @click="mobileMenuOpen = false" to="/contact" class="mobile-nav-link active-mobile">Contact</NuxtLink>
-          </div>
-        </div>
-      </transition>
-    </header>
-
+    <Navbar/>
     <!-- =========================================================
          HERO
     ========================================================== -->
@@ -238,6 +139,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
           <!-- Reservation -->
           <div class="contact-card group">
+            <a href="tel:+85516555091">
             <div class="card-number">01</div>
 
             <div class="icon-circle">
@@ -259,9 +161,10 @@
               Secure your table online or speak directly with our hospitality team.
             </p>
 
-            <a href="tel:+12345678900" class="gold-link">
-              +1 234 567 8900
+            <a href="tel:+85516555091" class="gold-link  cursor-alias">
+              +855 16555091
               <span>→</span>
+            </a>
             </a>
           </div>
 
@@ -288,9 +191,9 @@
               Questions about our menu, dietary needs, celebrations, or feedback?
             </p>
 
-            <a href="mailto:hello@flavoria.com" class="gold-link">
-              hello@flavoria.com
-              <span>→</span>
+            <a href="mailto:sovvanrith72@gmail.com" class="gold-link">
+              sovvanrith72@gmail.com
+              <span><a href="mailto:sovvanrith72@gmail.com">→</a></span>
             </a>
           </div>
 
@@ -317,8 +220,8 @@
               From intimate dinners to weddings and corporate celebrations.
             </p>
 
-            <a href="mailto:events@flavoria.com" class="gold-link">
-              events@flavoria.com
+            <a href="mailto:rithsovan102@gmail.com" class="gold-link">
+              rithsovan102@gmail.com
               <span>→</span>
             </a>
           </div>
@@ -537,9 +440,9 @@
                     <span class="info-label">Address</span>
 
                     <p class="mt-2 text-sm text-white/60 leading-7 font-sans">
-                      123 Culinary Avenue<br />
-                      Gourmet District<br />
-                      New York, NY 10001, USA
+                      Royal of Phnom Penh Univercity<br />
+                      ETET CENTER<br />
+                      Tuek Tla, Phnom Penh, King Dom of Cambodia
                     </p>
                   </div>
                 </div>
@@ -600,10 +503,10 @@
                     <span class="info-label">Reservations</span>
 
                     <a
-                      href="tel:+12345678900"
+                      href="tel:+85516555091"
                       class="block mt-2 font-serif text-xl text-[#D5A64C] hover:text-[#E5BD6E] transition-colors"
                     >
-                      +1 234 567 8900
+                      +855 16555091
                     </a>
                   </div>
                 </div>
@@ -666,6 +569,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import Footer from '~/components/Footer.vue'
+import Navbar from '~/components/Navbar.vue'
 
 const mobileMenuOpen = ref(false)
 const contactDetails = ref([])
@@ -877,6 +781,7 @@ const submitContactForm = () => {
   letter-spacing: 0.1em;
   color: #a07832;
   transition: gap 0.3s ease;
+  cursor: pointer;
 }
 
 .gold-link:hover {
@@ -1138,4 +1043,3 @@ const submitContactForm = () => {
   }
 }
 </style>
-```

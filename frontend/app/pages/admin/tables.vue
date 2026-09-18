@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useAuth } from '~/composables/useAuth'
+import { useRuntimeConfig } from '#imports'
+
+definePageMeta({ middleware: 'admin' })
 
 interface Table {
   id: string
@@ -10,9 +14,25 @@ interface Table {
   shape: 'round' | 'square' | 'long'
   bgImage: string
   currentGuest?: string
+  guestImage?: string
   partySize?: number
   timeSeated?: string
   server?: string
+}
+
+interface ApiTable {
+  id: number
+  number: number
+  capacity: number
+  status: Table['status']
+  zone: Table['zone']
+  shape: Table['shape']
+  bgImage: string
+  reservation?: {
+    guestName: string
+    guests: number
+    reservedFor: string
+  } | null
 }
 
 // Filters & State
@@ -21,6 +41,8 @@ const searchQuery = ref('')
 const selectedTable = ref<Table | null>(null)
 const isDetailsModalOpen = ref(false)
 const isAddTableModalOpen = ref(false)
+const config = useRuntimeConfig()
+const tableError = ref('')
 
 // Background image presets for tables/zones
 const tableBgPresets = [
@@ -49,6 +71,7 @@ const tables = ref<Table[]>([
     status: 'Occupied',
     shape: 'square',
     currentGuest: 'John Smith',
+    guestImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
     partySize: 3,
     timeSeated: '6:45 PM',
     server: 'Alex M.',
@@ -62,6 +85,7 @@ const tables = ref<Table[]>([
     status: 'Occupied',
     shape: 'square',
     currentGuest: 'Emma Watson',
+    guestImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
     partySize: 4,
     timeSeated: '7:15 PM',
     server: 'Sarah K.',
@@ -75,6 +99,7 @@ const tables = ref<Table[]>([
     status: 'Reserved',
     shape: 'long',
     currentGuest: 'Michael Chen (8:00 PM)',
+    guestImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
     partySize: 5,
     bgImage: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=800&auto=format&fit=crop'
   },
@@ -95,6 +120,7 @@ const tables = ref<Table[]>([
     status: 'Reserved',
     shape: 'long',
     currentGuest: 'Ambassador Party (8:30 PM)',
+    guestImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
     partySize: 8,
     bgImage: 'https://images.unsplash.com/photo-1578474846511-04ba529f0b88?q=80&w=800&auto=format&fit=crop'
   },
@@ -106,6 +132,7 @@ const tables = ref<Table[]>([
     status: 'Occupied',
     shape: 'long',
     currentGuest: 'Vance Group',
+    guestImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
     partySize: 10,
     timeSeated: '6:30 PM',
     server: 'David R.',
@@ -190,51 +217,82 @@ const getOccupancy = (table: Table) => {
   return Math.min(Math.round((table.partySize / table.capacity) * 100), 100)
 }
 
+const upcomingTables = computed(() => {
+  return tables.value.filter((t) => t.currentGuest)
+})
+
+const loadReservedTables = async () => {
+  const apiTables = await $fetch<ApiTable[]>('/tables', {
+    baseURL: config.public.apiBase,
+  })
+
+  tables.value = apiTables.map(apiTable => ({
+    id: String(apiTable.id),
+    number: apiTable.number,
+    capacity: apiTable.capacity,
+    zone: apiTable.zone,
+    shape: apiTable.shape,
+    status: apiTable.status,
+    bgImage: apiTable.bgImage || tableBgPresets[0] || '',
+    currentGuest: apiTable.reservation?.guestName,
+    partySize: apiTable.reservation?.guests,
+    timeSeated: apiTable.reservation
+      ? new Date(apiTable.reservation.reservedFor).toLocaleTimeString([], {
+          hour: 'numeric',
+          minute: '2-digit',
+        })
+      : undefined,
+  }))
+}
+
+onMounted(() => {
+  loadReservedTables().catch(() => {
+    // Keep the floor plan visible if the table service is unavailable.
+  })
+})
+
 // Handlers
 const openTableDetails = (table: Table) => {
   selectedTable.value = { ...table }
   isDetailsModalOpen.value = true
 }
 
-const updateTableStatus = (newStatus: Table['status']) => {
+const updateTableStatus = async (newStatus: Table['status']) => {
   if (!selectedTable.value) return
-  const target = tables.value.find(t => t.id === selectedTable.value?.id)
-  if (target) {
-    target.status = newStatus
-    if (newStatus === 'Available' || newStatus === 'Cleaning') {
-      target.currentGuest = undefined
-      target.partySize = undefined
-      target.timeSeated = undefined
-      target.server = undefined
-    }
+  try {
+    await $fetch(`/tables/${selectedTable.value.id}`, {
+      baseURL: config.public.apiBase,
+      method: 'PATCH',
+      body: { status: newStatus },
+    })
+    await loadReservedTables()
+    isDetailsModalOpen.value = false
+  } catch (error: any) {
+    tableError.value = error?.data?.message || 'Could not update table.'
   }
-  isDetailsModalOpen.value = false
 }
 
-const handleCreateTable = () => {
+const handleCreateTable = async () => {
   if (!newTableForm.value.number) return
-
-  const newId = `T-${Date.now().toString().slice(-4)}`
-  tables.value.push({
-    id: newId,
-    number: newTableForm.value.number,
-    capacity: newTableForm.value.capacity || 4,
-    zone: newTableForm.value.zone || 'Main Dining',
-    status: newTableForm.value.status || 'Available',
-    shape: newTableForm.value.shape || 'square',
-    bgImage: newTableForm.value.bgImage || tableBgPresets[0]
-  })
-
-  // Reset Form
-  newTableForm.value = {
-    number: undefined,
-    capacity: 4,
-    zone: 'Main Dining',
-    status: 'Available',
-    shape: 'square',
-    bgImage: tableBgPresets[0]
+  tableError.value = ''
+  try {
+    await $fetch('/tables', {
+      baseURL: config.public.apiBase,
+      method: 'POST',
+      body: {
+        number: newTableForm.value.number,
+        capacity: newTableForm.value.capacity || 4,
+        zone: newTableForm.value.zone || 'Main Dining',
+        status: (newTableForm.value.status || 'Available').toLowerCase(),
+        shape: newTableForm.value.shape || 'square',
+        bgImage: newTableForm.value.bgImage || '',
+      },
+    })
+    await loadReservedTables()
+    isAddTableModalOpen.value = false
+  } catch (error: any) {
+    tableError.value = error?.data?.message || 'Could not save table.'
   }
-  isAddTableModalOpen.value = false
 }
 </script>
 
@@ -354,7 +412,7 @@ const handleCreateTable = () => {
                 :alt="`Table ${table.number} Background`"
                 class="h-full w-full object-cover" 
               />
-              <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent"></div>
+              <div class="absolute inset-0 bg-linear-to-t from-gray-900/90 via-gray-900/40 to-transparent"></div>
 
               <!-- Top Badges -->
               <div class="absolute top-3 left-3 right-3 flex items-center justify-between">
@@ -407,11 +465,19 @@ const handleCreateTable = () => {
             <div class="p-4 space-y-3 bg-white">
               <div class="min-h-12">
                 <div v-if="table.currentGuest" class="flex items-start justify-between gap-2">
-                  <div>
+                  <div class="flex min-w-0 items-center gap-2">
+                    <img
+                      v-if="table.guestImage"
+                      :src="table.guestImage"
+                      :alt="table.currentGuest"
+                      class="h-9 w-9 shrink-0 rounded-full object-cover border border-gray-200"
+                    />
+                    <div class="min-w-0">
                     <p class="text-sm font-bold text-gray-900 truncate">{{ table.currentGuest }}</p>
                     <p class="text-[11px] text-gray-500 mt-0.5">
                       {{ table.timeSeated ? `Seated at ${table.timeSeated}` : 'Upcoming Reservation' }}
                     </p>
+                    </div>
                   </div>
                   <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-700 font-bold text-[10px] shrink-0 border border-gray-200">
                     {{ table.partySize }}/{{ table.capacity }} Guests
@@ -448,6 +514,41 @@ const handleCreateTable = () => {
           </div>
         </section>
 
+        <!-- Upcoming Reservations List -->
+        <section class="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs text-stone-700">
+              <thead>
+                <tr class="bg-stone-50 border-b border-stone-200 text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  <th scope="col" class="py-3.5 px-4">Table</th>
+                  <th scope="col" class="py-3.5 px-4">Guest</th>
+                  <th scope="col" class="py-3.5 px-4">Party</th>
+                  <th scope="col" class="py-3.5 px-4">Reserved For</th>
+                  <th scope="col" class="py-3.5 px-4">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-100">
+                <tr
+                  v-for="table in upcomingTables"
+                  :key="table.id"
+                  class="hover:bg-stone-50/80 transition-colors"
+                >
+                  <td class="py-3.5 px-4 font-bold">Table {{ table.number }}</td>
+                  <td class="py-3.5 px-4">{{ table.currentGuest }}</td>
+                  <td class="py-3.5 px-4">{{ table.partySize }}/{{ table.capacity }} Guests</td>
+                  <td class="py-3.5 px-4">{{ table.timeSeated || '—' }}</td>
+                  <td class="py-3.5 px-4">
+                    <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-bold text-[10px] uppercase">{{ table.status }}</span>
+                  </td>
+                </tr>
+                <tr v-if="upcomingTables.length === 0">
+                  <td colspan="5" class="py-8 text-center text-stone-400">No upcoming reservations.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
       </div>
     </main>
 
@@ -480,6 +581,12 @@ const handleCreateTable = () => {
           <div v-if="selectedTable.currentGuest" class="space-y-2">
             <h4 class="font-bold text-gray-900">Guest Information</h4>
             <div class="space-y-1.5 text-gray-700 bg-gray-50 p-3.5 rounded-lg border border-gray-200">
+              <img
+                v-if="selectedTable.guestImage"
+                :src="selectedTable.guestImage"
+                :alt="selectedTable.currentGuest"
+                class="h-14 w-14 rounded-full object-cover border border-gray-200"
+              />
               <p><strong>Name:</strong> {{ selectedTable.currentGuest }}</p>
               <p><strong>Party Size:</strong> {{ selectedTable.partySize }} Guests</p>
               <p v-if="selectedTable.server"><strong>Server:</strong> {{ selectedTable.server }}</p>

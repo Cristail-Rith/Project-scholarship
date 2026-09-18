@@ -44,12 +44,12 @@
 
           <!-- Username -->
           <div class="form-group">
-            <label for="email">Email</label>
+            <label for="email">Email or username</label>
 
             <input
               id="email"
               v-model="email"
-              type="email"
+              type="text"
               placeholder="you@example.com"
               autocomplete="email"
               required
@@ -91,7 +91,7 @@
               <span>Remember me</span>
             </label>
 
-            <NuxtLink to="/forgot-password" class="forgot">
+            <NuxtLink to="/login" class="forgot">
               Forgot password?
             </NuxtLink>
 
@@ -141,9 +141,9 @@ const handleLogin = async () => {
   }
 
   try {
-    await login(email.value, password.value)
+    const response = await login(email.value, password.value)
     message.value = 'Login successful!'
-    await navigateTo('/')
+    await navigateTo(response.user.role === 'admin' ? '/admin' : '/')
   } catch (error) {
     message.value = error?.data?.message || 'Invalid email or password.'
   }
