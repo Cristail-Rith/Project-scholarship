@@ -55,7 +55,7 @@ def create_user():
     ).first():
         return jsonify({"message": "Username or email already exists"}), 409
     role = str(data.get("role", "customer")).strip()
-    if role not in ("admin", "customer"):
+    if role not in ("admin", "customer", "online_customer"):
         role = "customer"
     hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
     user = User(
@@ -167,7 +167,10 @@ def update_user(user_id):
         user.phone = str(data["phone"]).strip() if data["phone"] else None
 
     if "role" in data:
-        user.role = str(data["role"]).strip()
+        role = str(data["role"]).strip()
+        if role not in ("admin", "customer", "online_customer"):
+            return jsonify({"message": "Invalid user role"}), 400
+        user.role = role
 
     if avatar_file:
         AVATAR_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}

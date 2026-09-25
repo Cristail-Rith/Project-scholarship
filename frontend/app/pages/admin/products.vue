@@ -51,7 +51,7 @@ const loadError = ref('')
 const isSaving = ref(false)
 const selectedImageFile = ref<File | null>(null)
 const imagePreview = ref('')
-const config = useRuntimeConfig()
+const { apiBase } = useApiBase()
 const { token } = useAuth()
 
 const getApiError = (error: any, fallback: string) =>
@@ -67,7 +67,7 @@ const api = <T>(path: string, options: Record<string, any> = {}) => {
   const authToken = token.value || storedToken
 
   return $fetch<T>(path, {
-    baseURL: config.public.apiBase,
+    baseURL: apiBase.value,
     ...options,
     headers: {
       ...(options.headers || {}),
@@ -78,7 +78,7 @@ const api = <T>(path: string, options: Record<string, any> = {}) => {
 
 const resolveImage = (image: string | undefined) => {
   if (!image) return ''
-  return image.startsWith('http') ? image : `${config.public.apiBase}${image}`
+  return image.startsWith('http') ? image : `${apiBase.value}${image}`
 }
 
 const selectImage = (event: Event) => {
@@ -280,7 +280,7 @@ const getProfitMargin = (cost: number, price: number) => {
               class="w-72 rounded-lg border border-stone-300 bg-stone-50 px-4 py-2 pl-9 text-xs text-stone-800 placeholder-stone-400 focus:border-amber-600 focus:bg-white focus:outline-none transition-all"
             />
             <svg class="absolute left-3 top-2.5 h-4 w-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0 1 14 0z"/>
             </svg>
           </div>
 
@@ -297,6 +297,11 @@ const getProfitMargin = (cost: number, price: number) => {
       </header>
 
       <div class="p-6 lg:p-8 space-y-6">
+
+        <!-- Load Error -->
+        <div v-if="loadError" class="mb-4 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs">
+          {{ loadError }}
+        </div>
 
         <!-- Top Metrics Overview -->
         <section class="grid grid-cols-1 sm:grid-cols-4 gap-5">
@@ -331,7 +336,7 @@ const getProfitMargin = (cost: number, price: number) => {
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50 text-rose-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/>
               </svg>
             </div>
           </div>
@@ -343,7 +348,7 @@ const getProfitMargin = (cost: number, price: number) => {
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0 1 18 0z"/>
               </svg>
             </div>
           </div>
@@ -485,7 +490,7 @@ const getProfitMargin = (cost: number, price: number) => {
                         title="Edit Product"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                       </button>
 
@@ -495,7 +500,7 @@ const getProfitMargin = (cost: number, price: number) => {
                         title="Delete Product"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
                       </button>
                     </div>
@@ -545,17 +550,27 @@ const getProfitMargin = (cost: number, price: number) => {
 
           <div>
             <label class="font-bold text-stone-700 block mb-1">Product Image</label>
-            <input
-              type="file"
-              accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
-              @change="selectImage"
-              class="w-full rounded-lg border border-stone-300 bg-stone-50 p-2.5 text-stone-900 file:mr-3 file:rounded-md file:border-0 file:bg-amber-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold"
-            />
+            <label class="group relative flex cursor-pointer items-center gap-4 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/60 p-4 transition hover:border-amber-500 hover:bg-amber-50 focus-within:ring-2 focus-within:ring-amber-400">
+              <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700 shadow-sm">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16.5V19a1 1 0 001 1h14a1 1 0 001-1v-2.5M12 15V4m0 0L8 8m4-4l4 4" /></svg>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-semibold text-stone-800">{{ selectedImageFile?.name || (isEditing && imagePreview ? 'Current image kept — choose a replacement' : 'Choose a product picture') }}</span>
+                <span class="mt-1 block text-xs font-normal text-stone-500">JPG, PNG, WEBP or GIF · up to 5 MB</span>
+              </span>
+              <span class="rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs font-bold text-amber-800 shadow-sm group-hover:border-amber-300">Browse</span>
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
+                @change="selectImage"
+                class="absolute inset-0 cursor-pointer opacity-0"
+              />
+            </label>
             <img
               v-if="imagePreview"
               :src="imagePreview"
               alt="Product preview"
-              class="mt-2 h-24 w-24 rounded-md object-cover border border-stone-200"
+              class="mt-3 h-36 w-full rounded-xl object-cover border border-stone-200 shadow-sm"
             />
           </div>
 

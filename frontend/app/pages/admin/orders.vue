@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '~/composables/useAuth'
-import { useRuntimeConfig } from '#imports'
+
+const { apiBase } = useApiBase()
 
 definePageMeta({ middleware: 'admin' })
 
@@ -16,6 +17,7 @@ interface Order {
   customerName: string
   orderType: 'Dine-In' | 'Takeout' | 'Delivery'
   tableNumber?: string
+  deliveryAddress?: string
   station: 'Kitchen Grill' | 'Pizza Oven' | 'Bar & Drinks' | 'Pastry & Cold' | 'Main Line'
   items: OrderItem[]
   totalAmount: number
@@ -70,10 +72,10 @@ const editingOrder = ref<Order>({
 })
 
 const orders = ref<Order[]>([])
+const orderToPrint = ref<Order | null>(null)
 const loading = ref(false)
 const error = ref('')
 const { token } = useAuth()
-const config = useRuntimeConfig()
 
 const statusMap: Record<string, Order['status']> = {
   pending: 'Pending',
@@ -92,7 +94,7 @@ async function fetchOrders() {
       return
     }
     const res = await $fetch<BackendOrder[]>('/orders', {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       headers: { Authorization: `Bearer ${authToken}` },
     })
     const stationPool: Order['station'][] = ['Main Line', 'Kitchen Grill', 'Pizza Oven', 'Pastry & Cold', 'Bar & Drinks']
@@ -103,6 +105,7 @@ async function fetchOrders() {
         o.order_type === 'dine-in' ? 0 : o.order_type === 'takeout' ? 1 : o.order_type === 'delivery' ? 2 : 0
       ],
       tableNumber: o.table_number || '',
+      deliveryAddress: o.delivery_address || '',
       station: stationPool[o.id % stationPool.length],
       items: o.items.map(item => ({
         name: item.product_name || `Product #${item.product_id}`,
@@ -136,7 +139,8 @@ const filteredOrders = computed(() => {
   return orders.value.filter(order => {
     const matchesSearch = order.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                           order.customerName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                          (order.tableNumber && order.tableNumber.toLowerCase().includes(searchQuery.value.toLowerCase()))
+                          (order.tableNumber && order.tableNumber.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+                          (order.deliveryAddress && order.deliveryAddress.toLowerCase().includes(searchQuery.value.toLowerCase()))
     const matchesStatus = selectedStatusFilter.value === 'All' || order.status === selectedStatusFilter.value
     const matchesType = selectedTypeFilter.value === 'All' || order.orderType === selectedTypeFilter.value
 
@@ -151,7 +155,7 @@ const cycleStatus = (order: Order) => {
   order.status = statusFlow[(currentIndex + 1) % statusFlow.length]
   if (order.dbId) {
     $fetch(`/orders/${order.dbId}`, {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       method: 'PATCH',
       headers: { Authorization: `Bearer ${token.value}` },
       body: { status: order.status.toLowerCase() },
@@ -198,7 +202,7 @@ const saveOrder = async () => {
   if (isEditing.value && editingOrder.value.dbId) {
     try {
       await $fetch(`/orders/${editingOrder.value.dbId}`, {
-        baseURL: config.public.apiBase,
+        baseURL: apiBase.value,
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token.value}` },
         body: { status: editingOrder.value.status.toLowerCase() },
@@ -216,7 +220,7 @@ const saveOrder = async () => {
         price: item.price,
       }))
       const res = await $fetch('/orders', {
-        baseURL: config.public.apiBase,
+        baseURL: apiBase.value,
         method: 'POST',
         headers: { Authorization: `Bearer ${token.value}`, 'Content-Type': 'application/json' },
         body: {
@@ -253,7 +257,7 @@ const deleteOrder = async (id: string) => {
     if (order?.dbId) {
       try {
         await $fetch(`/orders/${order.dbId}`, {
-          baseURL: config.public.apiBase,
+          baseURL: apiBase.value,
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token.value}` },
         })
@@ -263,6 +267,15 @@ const deleteOrder = async (id: string) => {
     }
     orders.value = orders.value.filter(o => o.id !== id)
   }
+}
+
+const printOrder = (order: Order) => {
+  orderToPrint.value = order
+  // Let Vue render the dedicated print sheet before opening the browser dialog.
+  requestAnimationFrame(() => {
+    window.print()
+    orderToPrint.value = null
+  })
 }
 
 // Dynamic Style Badges
@@ -288,6 +301,24 @@ onMounted(fetchOrders)
 </script>
 
 <template>
+  <section v-if="orderToPrint" class="print-sheet" aria-label="Order receipt">
+    <h1>Order {{ orderToPrint.id }}</h1>
+    <p><strong>Customer:</strong> {{ orderToPrint.customerName }}</p>
+    <p><strong>Order type:</strong> {{ orderToPrint.orderType }}<span v-if="orderToPrint.tableNumber"> · {{ orderToPrint.tableNumber }}</span></p>
+    <p><strong>Date:</strong> {{ orderToPrint.createdAt }}</p>
+    <p><strong>Status:</strong> {{ orderToPrint.status }}</p>
+    <h2>Items</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead>
+      <tbody>
+        <tr v-for="(item, index) in orderToPrint.items" :key="index">
+          <td>{{ item.name }}</td><td>{{ item.quantity }}</td><td>${{ item.price.toFixed(2) }}</td><td>${{ (item.price * item.quantity).toFixed(2) }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="print-total"><strong>Total: ${{ orderToPrint.totalAmount.toFixed(2) }}</strong></p>
+    <p v-if="orderToPrint.orderType === 'Delivery'"><strong>Delivery address:</strong> {{ orderToPrint.deliveryAddress || 'Address not provided' }}</p>
+  </section>
   <div class="min-h-screen bg-stone-100 text-stone-800 font-sans selection:bg-amber-100">
     <AdminSidebar />
 
@@ -309,7 +340,7 @@ onMounted(fetchOrders)
               class="w-72 rounded-lg border border-stone-300 bg-stone-50 px-4 py-2 pl-9 text-xs text-stone-800 placeholder-stone-400 focus:border-amber-600 focus:bg-white focus:outline-none transition-all"
             />
             <svg class="absolute left-3 top-2.5 h-4 w-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0 1 14 0z"/>
             </svg>
           </div>
 
@@ -336,7 +367,7 @@ onMounted(fetchOrders)
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
               </svg>
             </div>
           </div>
@@ -348,7 +379,7 @@ onMounted(fetchOrders)
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0 1 18 0z"/>
               </svg>
             </div>
           </div>
@@ -360,7 +391,7 @@ onMounted(fetchOrders)
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
               </svg>
             </div>
           </div>
@@ -372,7 +403,7 @@ onMounted(fetchOrders)
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0 1 18 0z"/>
               </svg>
             </div>
           </div>
@@ -444,7 +475,7 @@ onMounted(fetchOrders)
                   </td>
 
                   <!-- Type & Location -->
-                  <td class="py-3.5 px-4 whitespace-nowrap">
+                  <td class="py-3.5 px-4 max-w-[17rem]">
                     <div class="space-y-1">
                       <span 
                         :class="getTypeBadgeClass(order.orderType)"
@@ -455,6 +486,10 @@ onMounted(fetchOrders)
                       <span v-if="order.tableNumber" class="text-stone-500 font-mono text-[11px] block">
                         {{ order.tableNumber }}
                       </span>
+                      <div v-if="order.orderType === 'Delivery'" class="order-delivery-address mt-2 max-w-64 whitespace-normal rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2 text-[11px] leading-relaxed text-indigo-950">
+                        <span class="order-delivery-address__label mb-0.5 block text-[9px] font-bold uppercase tracking-wider text-indigo-700">Delivery address</span>
+                        <span class="break-words">{{ order.deliveryAddress || 'Address not provided' }}</span>
+                      </div>
                     </div>
                   </td>
 
@@ -495,13 +530,23 @@ onMounted(fetchOrders)
                   <!-- Actions -->
                   <td class="py-3.5 px-4 text-right pr-6 whitespace-nowrap">
                     <div class="flex items-center justify-end gap-1">
+                      <button
+                        @click="printOrder(order)"
+                        class="p-1.5 rounded-md text-stone-400 hover:text-blue-600 hover:bg-stone-100 transition-colors"
+                        title="Print order or save as PDF"
+                        aria-label="Print order or save as PDF"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
+                        </svg>
+                      </button>
                       <button 
                         @click="openEditModal(order)"
                         class="p-1.5 rounded-md text-stone-400 hover:text-amber-600 hover:bg-stone-100 transition-colors"
                         title="Edit Ticket"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                       </button>
 
@@ -511,7 +556,7 @@ onMounted(fetchOrders)
                         title="Delete Ticket"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
                       </button>
                     </div>
@@ -686,3 +731,28 @@ onMounted(fetchOrders)
     </div>
   </div>
 </template>
+
+<style>
+.print-sheet { display: none; }
+@media print {
+  body * { visibility: hidden !important; }
+  .print-sheet, .print-sheet * { visibility: visible !important; }
+  .print-sheet {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    padding: 24px;
+    color: #111;
+    background: white;
+    font: 14px/1.5 Arial, sans-serif;
+  }
+  .print-sheet h1 { font-size: 24px; margin: 0 0 16px; }
+  .print-sheet h2 { font-size: 18px; margin: 24px 0 8px; }
+  .print-sheet table { width: 100%; border-collapse: collapse; }
+  .print-sheet th, .print-sheet td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+  .print-sheet th:not(:first-child), .print-sheet td:not(:first-child) { text-align: right; }
+  .print-total { margin-top: 16px; text-align: right; font-size: 18px; }
+  @page { margin: 16mm; }
+}
+</style>

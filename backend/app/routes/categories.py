@@ -43,7 +43,7 @@ def get_category(category_id):
 def create_category():
     data = (
         request.form.to_dict()
-        if request.files
+        if request.form
         else (request.get_json(silent=True) or {})
     )
     name = str(data.get("name", "")).strip()
@@ -84,7 +84,7 @@ def update_category(category_id):
 
     data = (
         request.form.to_dict()
-        if request.files
+        if request.form
         else (request.get_json(silent=True) or {})
     )
     name = str(data.get("name", category.name)).strip()

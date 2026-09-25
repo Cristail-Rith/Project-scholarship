@@ -27,18 +27,21 @@ const placeOrder = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#FDFBF7] text-stone-900 font-sans antialiased">
+  <div class="min-h-screen bg-[#FDFBF7] text-stone-900 font-sans antialiased border-t-4 border-amber-500">
     <Navbar />
 
     <main class="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
       <!-- Header -->
-      <header class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b-2 border-stone-900 pb-6 mb-8">
+      <header class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b-1 border-gray-700 pb-6 mb-8">
         <div>
-          <span class="text-xs font-bold uppercase tracking-[0.25em] text-amber-700">Your selection</span>
-          <h1 class="mt-1 text-4xl sm:text-5xl font-serif tracking-tight">Shopping Cart</h1>
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span class="text-xs font-bold uppercase tracking-[0.25em] text-amber-600">Your selection</span>
+          </div>
+          <h1 class="mt-1 text-4xl sm:text-5xl font-serif tracking-tight text-stone-800">Shopping Cart</h1>
         </div>
         <div v-if="totalItems" class="flex items-center gap-3">
-          <span class="inline-flex items-center rounded-full bg-stone-200/80 px-3 py-1 text-xs font-medium text-stone-800">
+          <span class="inline-flex items-center rounded-none bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-700">
             {{ totalItems }} {{ totalItems === 1 ? 'item' : 'items' }}
           </span>
         </div>
@@ -49,19 +52,19 @@ const placeOrder = () => {
         <!-- Left: Cart Items List -->
         <section class="space-y-6">
           <!-- Free Shipping Banner -->
-          <div class="rounded-none border border-stone-300 bg-stone-100/60 p-4">
-            <div class="flex justify-between text-xs font-medium uppercase tracking-wider mb-2">
-              <span v-if="amountUntilFreeShipping > 0">
-                Add <strong class="text-amber-800">${{ amountUntilFreeShipping.toFixed(2) }}</strong> more for free shipping
+          <div class="rounded-[5px] border border-stone-300 bg-white p-5 shadow-xs">
+            <div class="flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+              <span v-if="amountUntilFreeShipping > 0" class="text-stone-700">
+                Add <strong class="text-amber-600 font-extrabold">${{ amountUntilFreeShipping.toFixed(2) }}</strong> more for free shipping
               </span>
-              <span v-else class="text-emerald-800 font-semibold">
-                You've unlocked free standard shipping!
+              <span v-else class="text-emerald-700 font-bold flex items-center gap-1">
+                <span>✓</span> You've unlocked free standard shipping!
               </span>
-              <span>${{ totalPrice.toFixed(2) }} / ${{ FREE_SHIPPING_THRESHOLD }}</span>
+              <span class="text-stone-500 font-mono">${{ totalPrice.toFixed(2) }} /${{ FREE_SHIPPING_THRESHOLD }}</span>
             </div>
-            <div class="h-1.5 w-full bg-stone-200 overflow-hidden">
+            <div class="h-2 w-full bg-stone-100 overflow-hidden border border-stone-200">
               <div 
-                class="h-full bg-amber-700 transition-all duration-500 ease-out" 
+                class="h-full bg-amber-500 transition-all duration-500 ease-out" 
                 :style="{ width: `${shippingProgress}%` }"
               />
             </div>
@@ -76,7 +79,7 @@ const placeOrder = () => {
                 class="group flex flex-col sm:flex-row gap-4 sm:gap-6 py-6 transition-all"
               >
                 <!-- Thumbnail -->
-                <NuxtLink :to="`/product/${item.id}`" class="relative h-28 w-28 shrink-0 overflow-hidden bg-stone-100 border border-stone-200">
+                <NuxtLink :to="`/product/${item.id}`" class="relative h-28 w-28 shrink-0 overflow-hidden bg-stone-100 border border-stone-200 group-hover:border-amber-500 transition-colors">
                   <img 
                     :src="item.image" 
                     :alt="item.title" 
@@ -90,15 +93,15 @@ const placeOrder = () => {
                     <div class="flex justify-between items-start gap-4">
                       <NuxtLink 
                         :to="`/product/${item.id}`" 
-                        class="font-serif text-xl text-stone-900 hover:text-amber-800 transition-colors line-clamp-1"
+                        class="font-serif text-xl text-stone-900 hover:text-amber-600 transition-colors line-clamp-1"
                       >
                         {{ item.title }}
                       </NuxtLink>
-                      <span class="font-serif text-lg font-semibold whitespace-nowrap">
+                      <span class="font-serif text-lg font-bold whitespace-nowrap text-stone-900">
                         ${{ (item.price * item.quantity).toFixed(2) }}
                       </span>
                     </div>
-                    <p class="mt-1 text-sm text-stone-500">${{ item.price.toFixed(2) }} each</p>
+                    <p class="mt-1 text-sm text-stone-500 font-mono">${{ item.price.toFixed(2) }} each</p>
                   </div>
 
                   <!-- Controls Row -->
@@ -107,19 +110,19 @@ const placeOrder = () => {
                     <div class="inline-flex items-center border border-stone-300 bg-white">
                       <button 
                         type="button" 
-                        class="h-8 w-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 hover:text-stone-900 transition-colors disabled:opacity-30" 
+                        class="h-8 w-8 flex items-center justify-center text-stone-600 hover:bg-amber-500 hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-stone-600" 
                         :disabled="item.quantity <= 1"
                         @click="updateQuantity(item.id, item.quantity - 1)"
                         aria-label="Decrease quantity"
                       >
                         &#8722;
                       </button>
-                      <span class="w-8 text-center text-sm font-semibold text-stone-900">
+                      <span class="w-8 text-center text-sm font-bold text-stone-900 font-mono">
                         {{ item.quantity }}
                       </span>
                       <button 
                         type="button" 
-                        class="h-8 w-8 flex items-center justify-center text-stone-600 hover:bg-stone-100 hover:text-stone-900 transition-colors" 
+                        class="h-8 w-8 flex items-center justify-center text-stone-600 hover:bg-amber-500 hover:text-white transition-colors" 
                         @click="updateQuantity(item.id, item.quantity + 1)"
                         aria-label="Increase quantity"
                       >
@@ -130,7 +133,7 @@ const placeOrder = () => {
                     <!-- Remove Action -->
                     <button 
                       type="button" 
-                      class="text-xs font-semibold uppercase tracking-widest text-stone-400 hover:text-red-800 transition-colors underline-offset-4 hover:underline" 
+                      class="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-rose-700 transition-colors underline-offset-4 hover:underline" 
                       @click="removeFromCart(item.id)"
                     >
                       Remove
@@ -145,25 +148,26 @@ const placeOrder = () => {
           <div class="pt-2">
             <button 
               type="button" 
-              class="text-xs font-bold uppercase tracking-wider text-stone-600 hover:text-amber-800 flex items-center gap-2"
+              class="text-xs font-bold uppercase tracking-wider text-stone-700 hover:text-amber-600 flex items-center gap-2 transition-colors"
               @click="showNoteInput = !showNoteInput"
             >
-              <span>{{ showNoteInput ? '− Hide' : '+' }} Add special instructions or gift note</span>
+              <span class="text-amber-500 font-bold text-sm">{{ showNoteInput ? '−' : '+' }}</span>
+              <span>Add special instructions or gift note</span>
             </button>
             <div v-if="showNoteInput" class="mt-3">
               <textarea 
                 v-model="orderNote" 
                 rows="3" 
                 placeholder="Include delivery instructions, gift messaging, or packaging preferences..." 
-                class="w-full border border-stone-300 bg-white p-3 text-sm focus:border-gray-500 focus:outline-none focus:ring-0 placeholder:text-stone-400"
+                class="w-full border border-stone-300 bg-white p-3 text-sm focus:border-amber-500 focus:outline-none rounded-none placeholder:text-stone-400"
               />
             </div>
           </div>
         </section>
 
         <!-- Right: Summary Drawer -->
-        <aside class="sticky top-8 border-2 border-stone-900 bg-white p-6 shadow-[4px_4px_0px_0px_rgba(28,25,23,1)]">
-          <h2 class="font-serif text-2xl pb-4 border-b border-stone-200">Order Summary</h2>
+        <aside class="sticky top-8 border border-gray-300 rounded-[7px] bg-white p-6 shadow-[4px_4px_0px_0px_rgba(245,158,11,1)]">
+          <h2 class="font-serif text-2xl pb-4 border-b border-stone-200 font-bold uppercase tracking-wide">Order Summary</h2>
 
           <!-- Promo Code Input -->
           <div class="mt-6">
@@ -176,18 +180,18 @@ const placeOrder = () => {
                 v-model="couponCode" 
                 type="text" 
                 placeholder="e.g. WELCOME10" 
-                class="min-w-0 flex-1 border border-stone-300 px-3 py-2 text-sm uppercase focus:border-stone-900 focus:outline-none"
+                class="min-w-0 flex-1 border border-stone-400 px-3 py-2 text-sm uppercase focus:border-amber-500 focus:outline-none rounded-[5px] font-mono"
               />
               <button 
                 type="button" 
-                class="bg-stone-200 px-4 py-2 text-xs font-bold uppercase tracking-wider text-stone-900 hover:bg-stone-300 transition-colors"
+                class="bg-gray-700 px-4 py-2 text-xs font-bold rounded-[5px] uppercase tracking-wider text-white hover:bg-amber-500 transition-colors"
                 @click="applyCoupon"
               >
                 Apply
               </button>
             </div>
-            <p v-if="couponApplied" class="mt-1.5 text-xs text-emerald-700 font-medium">
-              ✓ Promo applied: 10% discount included at checkout
+            <p v-if="couponApplied" class="mt-2 text-xs text-emerald-700 font-semibold flex items-center gap-1">
+              <span>✓</span> Promo applied: 10% discount included
             </p>
           </div>
 
@@ -195,55 +199,55 @@ const placeOrder = () => {
           <dl class="mt-6 space-y-3 border-t border-stone-200 pt-4 text-sm">
             <div class="flex justify-between text-stone-600">
               <dt>Subtotal</dt>
-              <dd class="font-semibold text-stone-900">${{ totalPrice.toFixed(2) }}</dd>
+              <dd class="font-bold text-stone-900 font-mono">${{ totalPrice.toFixed(2) }}</dd>
             </div>
             <div class="flex justify-between text-stone-600">
               <dt>Estimated Shipping</dt>
               <dd class="font-semibold text-stone-900">
-                <span v-if="amountUntilFreeShipping === 0" class="text-emerald-700 uppercase text-xs font-bold">Free</span>
-                <span v-else>$5.00</span>
+                <span v-if="amountUntilFreeShipping === 0" class="text-emerald-700 uppercase text-xs font-extrabold">Free</span>
+                <span v-else class="font-mono">$5.00</span>
               </dd>
             </div>
             <div class="flex justify-between text-stone-600">
               <dt>Estimated Tax</dt>
-              <dd class="text-stone-500 italic">Calculated at checkout</dd>
+              <dd class="text-stone-400 text-xs italic">Calculated at checkout</dd>
             </div>
             <div class="flex justify-between border-t border-stone-900 pt-4 font-serif text-xl font-bold text-stone-900">
               <dt>Total</dt>
-              <dd>${{ (totalPrice + (amountUntilFreeShipping === 0 ? 0 : 5)).toFixed(2) }}</dd>
+              <dd class="text-amber-600 font-mono">${{ (totalPrice + (amountUntilFreeShipping === 0 ? 0 : 5)).toFixed(2) }}</dd>
             </div>
           </dl>
 
           <!-- Action Buttons -->
           <button 
             type="button" 
-            class="mt-6 w-full border-2 border-stone-900 bg-stone-900 py-3.5 text-xs font-bold uppercase tracking-[0.2em] text-white hover:bg-amber-700 hover:border-amber-700 transition-colors shadow-sm" 
+            class="mt-6 w-full border-none  bg-red-600 py-3.5 text-xs font-bold uppercase tracking-[0.2em] text-white hover:bg-amber-800 hover:border-amber-800 transition-colors shadow-xs rounded-[5px]" 
             @click="placeOrder"
           >
             Proceed to Checkout
           </button>
 
           <!-- Security Badges / Guarantees -->
-          <div class="mt-6 flex items-center justify-center gap-4 border-t border-stone-100 pt-4 text-stone-400">
-            <span class="text-[10px] uppercase tracking-widest flex items-center gap-1">
-              🔒 Secure 256-Bit SSL Checkout
+          <div class="mt-6 flex items-center justify-center gap-2 border-t border-stone-100 pt-4 text-stone-400">
+            <span class="text-[10px] uppercase font-bold tracking-widest text-stone-500 flex items-center gap-1">
+              🔒 256-Bit SSL Encrypted
             </span>
           </div>
         </aside>
       </div>
 
       <!-- Empty State -->
-      <div v-else class="border-2 border-dashed border-stone-300 py-24 px-6 text-center bg-white/40">
-        <div class="mx-auto h-12 w-12 text-stone-400 mb-4 flex items-center justify-center rounded-full bg-stone-100">
+      <div v-else class="border-2 border-dashed border-stone-300 py-24 px-6 text-center bg-white">
+        <div class="mx-auto h-14 w-14 text-amber-500 mb-4 flex items-center justify-center rounded-none bg-amber-500/10 border border-amber-500/20 text-2xl">
           🛍️
         </div>
-        <h2 class="font-serif text-3xl text-stone-900">Your shopping cart is empty</h2>
+        <h2 class="font-serif text-3xl text-stone-900 font-bold">Your shopping cart is empty</h2>
         <p class="mt-2 text-stone-500 max-w-sm mx-auto text-sm">
           It looks like you haven't added anything to your cart yet. Explore our curated selection to get started.
         </p>
         <NuxtLink 
           to="/menu" 
-          class="mt-8 inline-block border-2 border-stone-900 bg-stone-900 px-8 py-3.5 text-xs font-bold uppercase tracking-[0.2em] text-white hover:bg-amber-700 hover:border-amber-700 transition-colors"
+          class="mt-8 inline-block border-2 border-amber-500 bg-amber-500 px-8 py-3.5 text-xs font-bold uppercase tracking-[0.2em] text-white hover:bg-amber-600 hover:border-amber-600 transition-colors rounded-none shadow-xs"
         >
           Browse the Collection
         </NuxtLink>

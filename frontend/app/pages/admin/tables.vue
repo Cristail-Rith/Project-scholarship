@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '~/composables/useAuth'
-import { useRuntimeConfig } from '#imports'
+
+const { apiBase } = useApiBase()
+const { token } = useAuth()
 
 definePageMeta({ middleware: 'admin' })
 
@@ -41,8 +43,25 @@ const searchQuery = ref('')
 const selectedTable = ref<Table | null>(null)
 const isDetailsModalOpen = ref(false)
 const isAddTableModalOpen = ref(false)
-const config = useRuntimeConfig()
 const tableError = ref('')
+const isSavingTable = ref(false)
+const selectedTableImage = ref<File | null>(null)
+const newTableImage = ref<File | null>(null)
+const selectedTableImagePreview = ref("")
+const newTableImagePreview = ref("")
+
+const resolveTableImage = (image: string) => image?.startsWith("http") || image?.startsWith("blob:") ? image : `${apiBase.value}${image || ""}`
+const selectTableImage = (event: Event, target: "edit" | "new") => {
+  const file = (event.target as HTMLInputElement).files?.[0] || null
+  if (!file) return
+  if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+    tableError.value = "Choose an image under 5 MB."
+    return
+  }
+  tableError.value = ""
+  if (target === "edit") { selectedTableImage.value = file; selectedTableImagePreview.value = URL.createObjectURL(file) }
+  else { newTableImage.value = file; newTableImagePreview.value = URL.createObjectURL(file) }
+}
 
 // Background image presets for tables/zones
 const tableBgPresets = [
@@ -53,7 +72,9 @@ const tableBgPresets = [
 ]
 
 // Floor Plan Tables Data
-const tables = ref<Table[]>([
+const tables = ref<Table[]>([])
+/*
+const sampleTables: Table[] = [
   {
     id: 'T1',
     number: 1,
@@ -165,7 +186,8 @@ const tables = ref<Table[]>([
     shape: 'round',
     bgImage: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=800&auto=format&fit=crop'
   }
-])
+]
+*/
 
 // Form state for creating a new table
 const newTableForm = ref<Partial<Table>>({
@@ -222,8 +244,11 @@ const upcomingTables = computed(() => {
 })
 
 const loadReservedTables = async () => {
+  const authToken = token.value || (import.meta.client ? localStorage.getItem('access_token') : null)
+  const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {}
   const apiTables = await $fetch<ApiTable[]>('/tables', {
-    baseURL: config.public.apiBase,
+    baseURL: apiBase.value,
+    headers,
   })
 
   tables.value = apiTables.map(apiTable => ({
@@ -246,23 +271,84 @@ const loadReservedTables = async () => {
 }
 
 onMounted(() => {
-  loadReservedTables().catch(() => {
-    // Keep the floor plan visible if the table service is unavailable.
+  loadReservedTables().catch((error: any) => {
+    tableError.value = error?.data?.message || 'Could not load tables. Check that the table service is available and try again.'
   })
 })
 
+const retryLoadTables = async () => {
+  tableError.value = ''
+  try {
+    await loadReservedTables()
+  } catch (error: any) {
+    tableError.value = error?.data?.message || 'Could not load tables. Check that the table service is available and try again.'
+  }
+}
+
 // Handlers
 const openTableDetails = (table: Table) => {
+  tableError.value = ''
   selectedTable.value = { ...table }
+  selectedTableImage.value = null
+  selectedTableImagePreview.value = ""
   isDetailsModalOpen.value = true
+}
+
+const saveTable = async () => {
+  if (!selectedTable.value) return
+  tableError.value = ''
+  isSavingTable.value = true
+  try {
+    const authToken = token.value || (import.meta.client ? localStorage.getItem('access_token') : null)
+    const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {}
+    const body = new FormData()
+    body.append('number', String(selectedTable.value.number))
+    body.append('capacity', String(selectedTable.value.capacity))
+    body.append('zone', selectedTable.value.zone)
+    body.append('shape', selectedTable.value.shape)
+    if (selectedTableImage.value) body.append('image', selectedTableImage.value)
+    else body.append('bgImage', selectedTable.value.bgImage)
+    await $fetch(`/tables/${selectedTable.value.id}`, { baseURL: apiBase.value, method: 'PATCH', headers, body })
+    await loadReservedTables()
+    isDetailsModalOpen.value = false
+  } catch (error: any) {
+    tableError.value = error?.data?.message || 'Could not save table changes.'
+  } finally {
+    isSavingTable.value = false
+  }
+}
+
+const deleteTable = async () => {
+  if (!selectedTable.value) return
+  if (!window.confirm(`Delete table ${selectedTable.value.number}? This cannot be undone.`)) return
+  tableError.value = ''
+  isSavingTable.value = true
+  try {
+    const authToken = token.value || (import.meta.client ? localStorage.getItem('access_token') : null)
+    const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {}
+    await $fetch(`/tables/${selectedTable.value.id}`, {
+      baseURL: apiBase.value,
+      method: 'DELETE',
+      headers,
+    })
+    await loadReservedTables()
+    isDetailsModalOpen.value = false
+  } catch (error: any) {
+    tableError.value = error?.data?.message || 'Could not delete table.'
+  } finally {
+    isSavingTable.value = false
+  }
 }
 
 const updateTableStatus = async (newStatus: Table['status']) => {
   if (!selectedTable.value) return
   try {
+    const authToken = token.value || (import.meta.client ? localStorage.getItem('access_token') : null)
+    const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {}
     await $fetch(`/tables/${selectedTable.value.id}`, {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       method: 'PATCH',
+      headers,
       body: { status: newStatus },
     })
     await loadReservedTables()
@@ -273,23 +359,35 @@ const updateTableStatus = async (newStatus: Table['status']) => {
 }
 
 const handleCreateTable = async () => {
-  if (!newTableForm.value.number) return
   tableError.value = ''
+  if (!newTableForm.value.number || Number(newTableForm.value.number) < 1) {
+    tableError.value = 'Enter a table number greater than zero.'
+    return
+  }
   try {
-    await $fetch('/tables', {
-      baseURL: config.public.apiBase,
-      method: 'POST',
-      body: {
-        number: newTableForm.value.number,
-        capacity: newTableForm.value.capacity || 4,
-        zone: newTableForm.value.zone || 'Main Dining',
-        status: (newTableForm.value.status || 'Available').toLowerCase(),
-        shape: newTableForm.value.shape || 'square',
-        bgImage: newTableForm.value.bgImage || '',
-      },
-    })
+    const authToken = token.value || (import.meta.client ? localStorage.getItem('access_token') : null)
+    const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {}
+    const body = new FormData()
+    body.append('number', String(newTableForm.value.number))
+    body.append('capacity', String(newTableForm.value.capacity || 4))
+    body.append('zone', newTableForm.value.zone || 'Main Dining')
+    body.append('status', (newTableForm.value.status || 'Available').toLowerCase())
+    body.append('shape', newTableForm.value.shape || 'square')
+    if (newTableImage.value) body.append('image', newTableImage.value)
+    else body.append('bgImage', newTableForm.value.bgImage || '')
+    await $fetch('/tables', { baseURL: apiBase.value, method: 'POST', headers, body })
     await loadReservedTables()
     isAddTableModalOpen.value = false
+    newTableImage.value = null
+    newTableImagePreview.value = ''
+    newTableForm.value = {
+      number: undefined,
+      capacity: 4,
+      zone: 'Main Dining',
+      status: 'Available',
+      shape: 'square',
+      bgImage: tableBgPresets[0],
+    }
   } catch (error: any) {
     tableError.value = error?.data?.message || 'Could not save table.'
   }
@@ -321,7 +419,7 @@ const handleCreateTable = async () => {
           </div>
 
           <button 
-            @click="isAddTableModalOpen = true"
+            @click="tableError = ''; isAddTableModalOpen = true"
             class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold uppercase tracking-wider transition-all shadow flex items-center gap-1.5"
           >
             <span>+</span> Add Table
@@ -330,6 +428,11 @@ const handleCreateTable = async () => {
       </header>
 
       <div class="p-6 lg:p-8 space-y-6">
+
+        <div v-if="tableError && !isDetailsModalOpen && !isAddTableModalOpen" role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex items-center justify-between">
+          <span>{{ tableError }}</span>
+          <button @click="retryLoadTables" class="font-semibold underline">Retry</button>
+        </div>
 
         <!-- Live Status Metric Counters -->
         <section class="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -408,7 +511,7 @@ const handleCreateTable = async () => {
             <!-- Visual Table Backdrop -->
             <div class="relative h-48 w-full overflow-hidden">
               <img 
-                :src="table.bgImage" 
+                :src="resolveTableImage(table.bgImage)" 
                 :alt="`Table ${table.number} Background`"
                 class="h-full w-full object-cover" 
               />
@@ -559,12 +662,52 @@ const handleCreateTable = async () => {
         <div class="flex items-center justify-between border-b border-gray-200 pb-4">
           <div>
             <span class="text-[10px] uppercase font-bold tracking-widest text-amber-600">{{ selectedTable.zone }}</span>
-            <h3 class="text-2xl font-bold text-gray-900">Table {{ selectedTable.number }} Status</h3>
+            <h3 class="text-2xl font-bold text-gray-900">Edit Table {{ selectedTable.number }}</h3>
           </div>
           <button @click="isDetailsModalOpen = false" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
         </div>
 
         <div class="space-y-4 text-xs">
+          <p v-if="tableError" role="alert" class="rounded-lg border border-red-200 bg-red-50 p-3 text-red-700">{{ tableError }}</p>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="font-bold text-gray-700">Table number
+              <input v-model.number="selectedTable.number" type="number" min="1" required class="mt-1 w-full rounded-lg border border-gray-300 p-2.5 font-normal" />
+            </label>
+            <label class="font-bold text-gray-700">Capacity
+              <input v-model.number="selectedTable.capacity" type="number" min="1" required class="mt-1 w-full rounded-lg border border-gray-300 p-2.5 font-normal" />
+            </label>
+            <label class="font-bold text-gray-700">Zone
+              <select v-model="selectedTable.zone" class="mt-1 w-full rounded-lg border border-gray-300 p-2.5 font-normal">
+                <option>Main Dining</option><option>VIP Lounge</option><option>Terrace</option><option>Bar</option>
+              </select>
+            </label>
+            <label class="font-bold text-gray-700">Shape
+              <select v-model="selectedTable.shape" class="mt-1 w-full rounded-lg border border-gray-300 p-2.5 font-normal">
+                <option value="round">Round</option><option value="square">Square</option><option value="long">Long</option>
+              </select>
+            </label>
+          </div>
+          <div>
+            <span class="mb-2 block text-xs font-bold uppercase tracking-wide text-gray-600">Table card picture</span>
+            <label class="group relative flex cursor-pointer items-center gap-4 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/60 p-4 transition hover:border-amber-500 hover:bg-amber-50 focus-within:ring-2 focus-within:ring-amber-400">
+              <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700 shadow-sm">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16.5V19a1 1 0 001 1h14a1 1 0 001-1v-2.5M12 15V4m0 0L8 8m4-4l4 4" /></svg>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-semibold text-gray-800">{{ selectedTableImage?.name || 'Choose a picture to upload' }}</span>
+                <span class="mt-1 block text-xs font-normal text-gray-500">JPG, PNG, WEBP or GIF · up to 5 MB</span>
+              </span>
+              <span class="rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs font-bold text-amber-800 shadow-sm group-hover:border-amber-300">Browse</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="absolute inset-0 cursor-pointer opacity-0" @change="selectTableImage($event, 'edit')" />
+            </label>
+            <img v-if="selectedTableImagePreview" :src="selectedTableImagePreview" alt="Selected table picture preview" class="mt-3 h-32 w-full rounded-xl border border-gray-200 object-cover shadow-sm" />
+            <span class="font-bold text-gray-700">Card background</span>
+            <div class="mt-2 grid grid-cols-4 gap-2">
+              <button v-for="(img, idx) in tableBgPresets" :key="idx" type="button" @click="selectedTable.bgImage = img; selectedTableImage = null; selectedTableImagePreview = ''" :class="['overflow-hidden rounded-lg border-2', selectedTable.bgImage === img ? 'border-amber-600' : 'border-gray-200']">
+                <img :src="resolveTableImage(img)" alt="Table background preset" class="h-12 w-full object-cover" />
+              </button>
+            </div>
+          </div>
           <div class="grid grid-cols-2 gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
             <div>
               <span class="text-gray-500 block">Total Capacity</span>
@@ -624,10 +767,14 @@ const handleCreateTable = async () => {
           </div>
         </div>
 
-        <div class="pt-4 border-t border-gray-200 flex justify-end">
+        <div class="pt-4 border-t border-gray-200 flex items-center justify-between">
+          <button @click="deleteTable" :disabled="isSavingTable" class="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-xs rounded-lg">Delete Table</button>
+          <div class="flex gap-2">
           <button @click="isDetailsModalOpen = false" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-xs rounded-lg">
             Close
           </button>
+          <button @click="saveTable" :disabled="isSavingTable" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold text-xs rounded-lg">{{ isSavingTable ? 'Saving…' : 'Save Changes' }}</button>
+          </div>
         </div>
 
       </div>
@@ -646,6 +793,7 @@ const handleCreateTable = async () => {
         </div>
 
         <form @submit.prevent="handleCreateTable" class="space-y-4 text-xs">
+          <p v-if="tableError" role="alert" class="rounded-lg border border-red-200 bg-red-50 p-3 text-red-700">{{ tableError }}</p>
           
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -653,6 +801,7 @@ const handleCreateTable = async () => {
               <input 
                 v-model.number="newTableForm.number" 
                 type="number" 
+                min="1"
                 placeholder="e.g. 12"
                 required
                 class="w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-800 focus:border-amber-500 focus:bg-white focus:outline-none"
@@ -697,13 +846,26 @@ const handleCreateTable = async () => {
           </div>
 
           <div>
+            <span class="mb-2 block text-xs font-bold uppercase tracking-wide text-gray-600">Table card picture</span>
+            <label class="group relative flex cursor-pointer items-center gap-4 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/60 p-4 transition hover:border-amber-500 hover:bg-amber-50 focus-within:ring-2 focus-within:ring-amber-400">
+              <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700 shadow-sm">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16.5V19a1 1 0 001 1h14a1 1 0 001-1v-2.5M12 15V4m0 0L8 8m4-4l4 4" /></svg>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-semibold text-gray-800">{{ newTableImage?.name || 'Choose a picture to upload' }}</span>
+                <span class="mt-1 block text-xs font-normal text-gray-500">JPG, PNG, WEBP or GIF · up to 5 MB</span>
+              </span>
+              <span class="rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs font-bold text-amber-800 shadow-sm group-hover:border-amber-300">Browse</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="absolute inset-0 cursor-pointer opacity-0" @change="selectTableImage($event, 'new')" />
+            </label>
+            <img v-if="newTableImagePreview" :src="newTableImagePreview" alt="Selected table picture preview" class="mt-3 h-32 w-full rounded-xl border border-gray-200 object-cover shadow-sm" />
             <label class="font-bold text-gray-700 block mb-1">Select Card Background Image</label>
             <div class="grid grid-cols-4 gap-2">
               <img 
                 v-for="(img, idx) in tableBgPresets" 
                 :key="idx"
                 :src="img"
-                @click="newTableForm.bgImage = img"
+                @click="newTableForm.bgImage = img; newTableImage = null; newTableImagePreview = ''"
                 :class="[
                   'h-14 w-full rounded-lg object-cover cursor-pointer border-2 transition-all',
                   newTableForm.bgImage === img ? 'border-amber-600 ring-2 ring-amber-300' : 'border-gray-200 opacity-70'
@@ -735,3 +897,8 @@ const handleCreateTable = async () => {
 
   </div>
 </template>
+
+
+
+
+

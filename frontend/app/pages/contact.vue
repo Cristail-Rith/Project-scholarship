@@ -1,4 +1,4 @@
-```vue
+
 <template>
   <div
     class="min-h-screen bg-[#F8F5EF] text-[#25211D] selection:bg-[#C59237] selection:text-white"
@@ -22,7 +22,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="1.6"
-                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                d="M3 5a2 2 0 0 1 2-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 0 0 5.516 5.516l1.13-2.257a1 1 0 0 1 1.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
               />
             </svg>
             <a href="tel:+85516555091">+855 16555091</a>
@@ -37,7 +37,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="1.6"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 0 0 2 2z"
               />
             </svg>
             <a href="mailto:sovvanrith72@gmail.com">sovvanrith72@gmail.com</a>
@@ -148,7 +148,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="1.6"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 0 0 2 2z"
                 />
               </svg>
             </div>
@@ -178,7 +178,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="1.6"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 0 0 2 2z"
                 />
               </svg>
             </div>
@@ -207,7 +207,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="1.6"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4"
                 />
               </svg>
             </div>
@@ -310,6 +310,8 @@
               @submit.prevent="submitContactForm"
               class="space-y-7 font-sans"
             >
+              <p v-if="contactSubmitted" role="status" class="rounded-lg border border-emerald-700 bg-emerald-950/50 p-4 text-sm text-emerald-200">Thank you, {{ submittedName }}. Your message is in our inbox and our team will contact you shortly.</p>
+              <p v-if="contactError" role="alert" class="rounded-lg border border-rose-700 bg-rose-950/50 p-4 text-sm text-rose-200">{{ contactError }}</p>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-7">
                 <div class="field-group">
                   <label class="field-label">
@@ -393,9 +395,10 @@
 
                 <button
                   type="submit"
+                  :disabled="isSubmitting"
                   class="luxury-button group"
                 >
-                  <span>Send Request</span>
+                  <span>{{ isSubmitting ? 'Sending...' : 'Send Request' }}</span>
                   <span class="button-arrow group-hover:translate-x-1 transition-transform">
                     →
                   </span>
@@ -425,13 +428,13 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="1.6"
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"
                       />
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="1.6"
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 0 1 6 0z"
                       />
                     </svg>
                   </div>
@@ -457,7 +460,7 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="1.6"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0 1 18 0z"
                       />
                     </svg>
                   </div>
@@ -494,7 +497,7 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="1.6"
-                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                        d="M3 5a2 2 0 0 1 2-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 0 0 5.516 5.516l1.13-2.257a1 1 0 0 1 1.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                       />
                     </svg>
                   </div>
@@ -571,13 +574,18 @@ import { ref, reactive, onMounted } from 'vue'
 import Footer from '~/components/Footer.vue'
 import Navbar from '~/components/Navbar.vue'
 
+const { apiBase } = useApiBase()
+
 const mobileMenuOpen = ref(false)
 const contactDetails = ref([])
-const config = useRuntimeConfig()
+const isSubmitting = ref(false)
+const contactSubmitted = ref(false)
+const submittedName = ref('')
+const contactError = ref('')
 
 onMounted(async () => {
   try {
-    contactDetails.value = await $fetch(`${config.public.apiBase}/contact-info`)
+    contactDetails.value = await $fetch(`${apiBase.value}/contact-info`)
   } catch (error) {
     console.error('Unable to load contact details:', error)
   }
@@ -592,17 +600,36 @@ const form = reactive({
   message: ''
 })
 
-const submitContactForm = () => {
-  alert(
-    `Thank you, ${form.name}! Your request has been sent. We will contact you shortly.`
-  )
-
-  form.name = ''
-  form.email = ''
-  form.phone = ''
-  form.date = ''
-  form.guests = '2'
-  form.message = ''
+const submitContactForm = async () => {
+  isSubmitting.value = true
+  contactSubmitted.value = false
+  contactError.value = ''
+  try {
+    await $fetch('/contact-messages', {
+      baseURL: apiBase.value,
+      method: 'POST',
+      body: {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        date: form.date,
+        guests: form.guests,
+        message: form.message,
+      },
+    })
+    submittedName.value = form.name
+    contactSubmitted.value = true
+    form.name = ''
+    form.email = ''
+    form.phone = ''
+    form.date = ''
+    form.guests = '2'
+    form.message = ''
+  } catch (error) {
+    contactError.value = error?.data?.message || 'Could not send your request. Please try again.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 

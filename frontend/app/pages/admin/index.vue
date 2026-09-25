@@ -1,31 +1,38 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import AdminSidebar from '~/components/AdminSidebar.vue'
+import Chart from '~/components/Chart.vue'
 import { useAuth } from '~/composables/useAuth'
-import { useRuntimeConfig } from '#imports'
+import { useAdminTheme } from '~/composables/useAdminTheme'
+
+const { apiBase } = useApiBase()
 
 definePageMeta({ middleware: 'admin' })
 
 const { user, token } = useAuth()
-const config = useRuntimeConfig()
+const { isDark } = useAdminTheme()
 const adminAvatar = ref('')
 // Computed property to construct full avatar URL
 const avatarUrl = computed(() => {
   if (!adminAvatar.value) return ''
   if (adminAvatar.value.startsWith('http')) return adminAvatar.value
-  return config.public.apiBase + adminAvatar.value
+  return apiBase.value + adminAvatar.value
 })
 
 
 const searchQuery = ref('')
 const selectedStatusFilter = ref('All')
-const revenuePeriod = ref('This Week')
 const loading = ref(false)
 const orders = ref<any[]>([])
 const categories = ref<any[]>([])
 const tables = ref<any[]>([])
 const products = ref<any[]>([])
 const reservations = ref<any[]>([])
+const pendingReservationCount = computed(() => reservations.value.filter(item => item.status === 'pending').length)
+const eventInquiries = ref<any[]>([])
+const newEventInquiryCount = computed(() => eventInquiries.value.filter(item => item.status === 'new').length)
+const contactMessages = ref<any[]>([])
+const newContactMessageCount = computed(() => contactMessages.value.filter(item => item.status === 'new').length)
 
 onMounted(async () => {
   loading.value = true
@@ -33,7 +40,7 @@ onMounted(async () => {
     if (token.value) {
       try {
         const res = await $fetch('/me', {
-          baseURL: config.public.apiBase,
+          baseURL: apiBase.value,
           headers: {
             Authorization: `Bearer ${token.value}`,
           },
@@ -47,51 +54,64 @@ onMounted(async () => {
     if (authToken) {
       const headers = { Authorization: `Bearer ${authToken}` }
       try {
-        const ordersRes = await $fetch<{ orders: any[] }>('/orders', {
-          baseURL: config.public.apiBase,
+        const ordersRes = await $fetch('/orders', {
+          baseURL: apiBase.value,
           headers,
         })
         const statusMap: Record<string, string> = {
           pending: 'Pending', preparing: 'Preparing', ready: 'Ready',
           delivered: 'Delivered', cancelled: 'Cancelled', completed: 'Completed',
         }
-        orders.value = (ordersRes.orders || []).map((o: any, i: number) => ({
-          id: `#ORD-${o.id}`,
-          customer: `User ${o.user_id}`,
-          item: (o.items || []).map((it: any) => `${it.quantity}x Product #${it.product_id}`).join(', ') || '—',
-          total: `$${(o.total_price || 0).toFixed(2)}`,
-          status: statusMap[(o.status || 'pending').toLowerCase()] || 'Pending',
-          time: ['10:30 AM', '10:45 AM', '11:05 AM', '11:20 AM', '2:15 PM'][i % 5],
-          table: `Table ${(i % 12) + 1}`,
-        }))
+orders.value = (Array.isArray(ordersRes) ? ordersRes : (ordersRes as any)?.orders || []).map((o: any, i: number) => {
+          const rawPrice = o.total_price || 0
+          const orderDate = o.created_at ? new Date(o.created_at) : new Date()
+          return {
+            id: `#ORD-${o.id}`,
+            customer: o.customer_name || `User ${o.user_id}`,
+            item: (o.items || []).map((it: any) => `${it.quantity}x ${it.product_name || ('Product #' + it.product_id)}`).join(', ') || '—',
+            total: `$${rawPrice.toFixed(2)}`,
+            rawTotal: rawPrice,
+            date: orderDate.toISOString().slice(0, 10),
+            day: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][orderDate.getDay()],
+            time: orderDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            status: statusMap[(o.status || 'pending').toLowerCase()] || 'Pending',
+            table: o.table_number || `Table ${(i % 12) + 1}`,
+          }
+        })
       } catch {}
       try {
-        const catsRes = await $fetch<{ categories: any[] }>('/categories', {
-          baseURL: config.public.apiBase,
+        const catsRes = await $fetch('/categories', {
+          baseURL: apiBase.value,
           headers,
         })
-        categories.value = catsRes.categories || []
+        categories.value = (Array.isArray(catsRes) ? catsRes : (catsRes as any)?.categories || [])
       } catch {}
       try {
-        const tablesRes = await $fetch<{ tables: any[] }>('/tables', {
-          baseURL: config.public.apiBase,
+        const tablesRes = await $fetch('/tables', {
+          baseURL: apiBase.value,
           headers,
         })
-        tables.value = tablesRes.tables || []
+        tables.value = (Array.isArray(tablesRes) ? tablesRes : (tablesRes as any)?.tables || [])
       } catch {}
       try {
-        const prodRes = await $fetch<{ products: any[] }>('/products', {
-          baseURL: config.public.apiBase,
+        const prodRes = await $fetch('/products', {
+          baseURL: apiBase.value,
           headers,
         })
-        products.value = prodRes.products || []
+        products.value = (Array.isArray(prodRes) ? prodRes : (prodRes as any)?.products || [])
       } catch {}
       try {
-        const resRes = await $fetch<{ reservations: any[] }>('/reservations', {
-          baseURL: config.public.apiBase,
+        const resRes = await $fetch('/reservations', {
+          baseURL: apiBase.value,
           headers,
         })
-        reservations.value = resRes.reservations || []
+        reservations.value = (Array.isArray(resRes) ? resRes : (resRes as any)?.reservations || [])
+      } catch {}
+      try {
+        eventInquiries.value = await $fetch('/event-inquiries', { baseURL: apiBase.value, headers })
+      } catch {}
+      try {
+        contactMessages.value = await $fetch('/contact-messages', { baseURL: apiBase.value, headers })
       } catch {}
     }
   } catch {}
@@ -108,6 +128,136 @@ const tableCapacity = computed(() => Math.round((occupiedTables.value / totalTab
 
 const revenueTotal = computed(() => orders.value.reduce((sum, order) => sum + Number(order.total.replace('$', '')), 0))
 const averageTicket = computed(() => orders.value.length ? revenueTotal.value / orders.value.length : 0)
+
+// Daily revenue chart data based on orders from this week
+const dailyRevenue = computed(() => {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const today = new Date()
+  const last7 = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(today.getDate() - 6 + i)
+    return { date: d.toISOString().slice(0, 10), day: days[d.getDay()] }
+  })
+
+  const data = last7.map(({ date, day }) => {
+    const dayOrders = orders.value.filter(o => o.date === date)
+    const revenue = dayOrders.reduce((sum, o) => sum + (o.rawTotal || 0), 0)
+    return { day, revenue, count: dayOrders.length }
+  })
+  
+  return data
+})
+
+const weeklyRevenue = computed(() => dailyRevenue.value.reduce((sum, day) => sum + day.revenue, 0))
+const weeklyOrderCount = computed(() => dailyRevenue.value.reduce((sum, day) => sum + day.count, 0))
+
+const maxRevenue = computed(() => {
+  const max = Math.max(...dailyRevenue.value.map(d => d.revenue), 1)
+  return max
+})
+
+// Chart.js data for Revenue Analytics line chart
+const revenueChartData = computed(() => ({
+  labels: dailyRevenue.value.map(d => d.day),
+  datasets: [{
+    label: 'Revenue',
+    data: dailyRevenue.value.map(d => d.revenue),
+    borderColor: 'rgb(197 146 55)',
+    backgroundColor: isDark.value ? 'rgb(197 146 55 / 0.2)' : 'rgb(197 146 55 / 0.14)',
+    borderWidth: 3.5,
+    pointBackgroundColor: '#C59237',
+    pointBorderColor: '#ffffff',
+    pointBorderWidth: 2,
+    pointRadius: 4.5,
+    pointHoverRadius: 7,
+    pointHoverBackgroundColor: '#C59237',
+    pointHoverBorderColor: '#C59237',
+    pointHoverBorderWidth: 3,
+    tension: 0.4,
+    fill: true,
+  }]
+}))
+
+const revenueChartOptions = computed(() => {
+  const chartText = isDark.value ? '#c8bba8' : '#647489'
+  const chartMuted = isDark.value ? '#a99b87' : '#475569'
+  const chartSurface = isDark.value ? 'rgba(35, 31, 26, 0.97)' : 'rgba(255, 255, 255, 0.95)'
+  return {
+  animation: {
+    duration: 2500,
+    easing: 'easeOutQuart',
+  },
+  plugins: {
+    legend: {
+      display: false,
+    },
+    tooltip: {
+      backgroundColor: chartSurface,
+      titleColor: isDark.value ? '#f3e5ce' : '#263344',
+      titleFont: { size: 13, weight: 700, family: 'Georgia, serif' },
+      bodyColor: chartMuted,
+      bodyFont: { size: 12 },
+      borderColor: 'rgb(197 146 55 / 0.3)',
+      borderWidth: 2,
+      padding: { top: 10, bottom: 10, left: 14, right: 14 },
+      cornerRadius: 12,
+      boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+      backdropFilter: 'blur(10px)',
+      callbacks: {
+        title: () => 'Revenue Details',
+        label: (ctx) => {
+          const dayData = dailyRevenue.value[ctx.dataIndex]
+          return `$${ctx.parsed.y.toFixed(2)} (${dayData.count} ${dayData.count === 1 ? 'order' : 'orders'})`
+        },
+        labelColor: () => chartText,
+        labelFontSize: () => 12,
+        labelFontWeight: () => 600,
+      },
+    },
+    datalabels: {
+      display: true,
+      color: chartMuted,
+      font: { size: 11, weight: 600 },
+      anchor: 'end',
+      align: 'top',
+      formatter: (val) => `$${val.toFixed(0)}`,
+    },
+  },
+  scales: {
+    y: {
+      grid: {
+        color: isDark.value ? 'rgb(191 161 116 / 0.18)' : 'rgb(226 232 240 / 0.5)',
+        borderColor: 'rgb(197 146 55 / 0.2)',
+        borderWidth: 1,
+        drawBorder: false,
+      },
+      ticks: {
+        color: chartText,
+        font: { size: 11, weight: 500 },
+        padding: 8,
+        callback: (val) => '$' + val,
+      },
+      beginAtZero: true,
+      border: { dash: [4, 4], color: 'rgb(197 146 55 / 0.15)' },
+      position: 'left',
+    },
+    x: {
+      grid: { display: false },
+      ticks: {
+        color: chartText,
+        font: { size: 12, weight: 600 },
+        padding: 6,
+      },
+      border: { color: 'rgb(197 146 55 / 0.2)', width: 1 },
+    },
+  },
+  barPercentage: 0.65,
+  categoryPercentage: 0.8,
+  maintainAspectRatio: false,
+  }
+})
+
+const totalRevenue = computed(() => revenueTotal.value)
 
 const stats = computed(() => [
   {
@@ -151,7 +301,7 @@ const popularFoods = computed(() => {
       price: `$${(p.price || 0).toFixed(2)}`,
       orders: Math.floor(Math.random() * 300) + 50,
       growth: `+${Math.floor(Math.random() * 25)}%`,
-      image: p.image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200',
+      image: p.image && (p.image.startsWith('http') || p.image.startsWith('blob:')) ? p.image : (p.image ? `${apiBase.value}${p.image}` : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200'),
     }))
 })
 
@@ -204,7 +354,7 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#FBF9F5] text-stone-800 font-sans selection:bg-amber-100">
+  <div class="admin-dashboard min-h-screen bg-[#FBF9F5] text-stone-800 font-sans selection:bg-amber-100">
     <!-- Sidebar Placeholder -->
     <AdminSidebar />
 
@@ -254,6 +404,20 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
 
       <!-- Dashboard Body -->
       <div class="p-6 lg:p-8 space-y-8">
+
+        <NuxtLink v-if="pendingReservationCount" to="/admin/reservations" class="dashboard-notice dashboard-notice--reservation flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-4 text-violet-950 transition hover:bg-violet-100">
+          <span class="dashboard-notice__copy"><strong>{{ pendingReservationCount }} table reservation request{{ pendingReservationCount === 1 ? '' : 's' }}</strong><span class="ml-2 text-sm text-violet-800">Review the guest’s room, table, and special requests.</span></span>
+          <span class="dashboard-notice__action rounded-lg bg-violet-800 px-4 py-2 text-xs font-bold text-white">Review bookings →</span>
+        </NuxtLink>
+
+        <NuxtLink v-if="newEventInquiryCount" to="/admin/event-inquiries" class="dashboard-notice dashboard-notice--event flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-950 transition hover:bg-amber-100">
+          <span class="dashboard-notice__copy"><strong>{{ newEventInquiryCount }} new event booking request{{ newEventInquiryCount === 1 ? '' : 's' }}</strong><span class="ml-2 text-sm text-amber-800">Open the event inbox to review guest messages.</span></span>
+          <span class="dashboard-notice__action rounded-lg bg-amber-700 px-4 py-2 text-xs font-bold text-white">View requests →</span>
+        </NuxtLink>
+        <NuxtLink v-if="newContactMessageCount" to="/admin/contact-messages" class="dashboard-notice dashboard-notice--contact flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-4 text-sky-950 transition hover:bg-sky-100">
+          <span class="dashboard-notice__copy"><strong>{{ newContactMessageCount }} new contact request{{ newContactMessageCount === 1 ? '' : 's' }}</strong><span class="ml-2 text-sm text-sky-800">Guest reservation requests and questions are waiting.</span></span>
+          <span class="dashboard-notice__action rounded-lg bg-sky-800 px-4 py-2 text-xs font-bold text-white">Open messages →</span>
+        </NuxtLink>
         
         <!-- Welcome Hero Banner -->
         <section class="relative overflow-hidden rounded-2xl bg-stone-950 p-8 text-white shadow-xl">
@@ -269,12 +433,12 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-              <button class="px-5 py-2.5 rounded-xl bg-[#C59237] hover:bg-[#b0802c] text-white text-xs font-semibold uppercase tracking-wider transition-all shadow-md">
+              <NuxtLink to="/admin/orders" class="px-5 py-2.5 rounded-xl bg-[#C59237] hover:bg-[#b0802c] text-white text-xs font-semibold uppercase tracking-wider transition-all shadow-md">
                 + New POS Order
-              </button>
-              <button class="px-5 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 text-xs font-semibold uppercase tracking-wider transition-all">
+              </NuxtLink>
+              <NuxtLink to="/admin/tables" class="px-5 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 text-xs font-semibold uppercase tracking-wider transition-all">
                 Manage Floor Map
-              </button>
+              </NuxtLink>
             </div>
           </div>
         </section>
@@ -288,7 +452,7 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v18m4-14.5c-.7-.7-1.8-1.2-3.3-1.2-2.1 0-3.7 1.1-3.7 2.8 0 4.1 7 2.1 7 6.1 0 1.8-1.5 2.9-3.8 2.9-1.6 0-2.9-.5-3.8-1.5" />
                 </svg>
                 <svg v-else-if="stat.icon === 'orders'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 4h2l1.5 10.5a2 2 0 002 1.5h7.8a2 2 0 001.9-1.4L20 8H6m3 12h.01M17 20h.01" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 4h2l1.5 10.5a2 2 0 0 0 2 1.5h7.8a2 2 0 0 0 1.9-1.4L20 8H6m3 12h.01M17 20h.01" />
                 </svg>
                 <svg v-else-if="stat.icon === 'average'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 19V5m0 14h16M8 16v-3m4 3V8m4 8v-6" />
@@ -312,31 +476,25 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
         <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
           
           <!-- Revenue Visualizer -->
-          <div class="xl:col-span-2 rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs">
+          <div class="chart-panel xl:col-span-2 rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div>
-                <h3 class="font-serif text-lg font-bold text-stone-900">Revenue Analytics</h3>
-                <p class="text-xs text-stone-400">Weekly monetary performance comparison</p>
+                <h3 class="font-serif text-lg font-bold text-stone-900 border-b-2 border-[#C59237] pb-1.5 mb-1">Revenue Analytics</h3>
+                <p class="text-xs text-stone-400">Daily sales performance this week</p>
               </div>
-              <select v-model="revenuePeriod" class="rounded-xl border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs text-stone-700 focus:outline-none">
-                <option>This Week</option>
-                <option>This Month</option>
-                <option>This Year</option>
-              </select>
+              <div class="flex items-center gap-4">
+                <div class="hidden sm:block text-right">
+                  <span class="block text-[9px] font-bold uppercase tracking-[0.16em] text-stone-400">Weekly revenue</span>
+                  <strong class="font-serif text-lg text-stone-900">${{ weeklyRevenue.toFixed(2) }}</strong>
+                  <span class="ml-2 text-[10px] text-stone-400">{{ weeklyOrderCount }} orders</span>
+                </div>
+                <span class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">This Week</span>
+              </div>
             </div>
 
             <!-- Bar Chart Visual -->
-            <div class="flex h-60 items-end justify-between gap-3 border-b border-stone-200 px-2 pb-2">
-              <div v-for="(height, index) in [45, 65, 50, 85, 60, 95, 75]" :key="index" class="group flex flex-1 flex-col items-center justify-end">
-                <div class="relative w-full max-w-9 rounded-t-lg bg-stone-800 transition-all group-hover:bg-[#C59237]" :style="{ height: `${height}%` }">
-                  <span class="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-stone-900 text-white text-[10px] px-1.5 py-0.5 rounded-xs">
-                    ${{ height * 25 }}
-                  </span>
-                </div>
-                <span class="mt-3 text-[11px] font-medium text-stone-400">
-                  {{ ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] }}
-                </span>
-              </div>
+            <div class="chart-well">
+              <Chart type="line" :data="revenueChartData" :options="revenueChartOptions" :height="260" />
             </div>
           </div>
 
@@ -344,7 +502,7 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
           <div class="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between mb-4">
-                <h3 class="font-serif text-lg font-bold text-stone-900">Kitchen Express Queue</h3>
+                <h3 class="font-serif text-lg font-bold text-stone-900 border-b-2 border-[#C59237] pb-1.5 mb-1">Kitchen Express Queue</h3>
                 <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">Live Stream</span>
               </div>
               <p class="text-xs text-stone-400 mb-5">Current dishes pending chef pickup</p>
@@ -365,9 +523,9 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
               </div>
             </div>
 
-            <button class="mt-6 w-full py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl transition-colors">
+            <NuxtLink to="/admin/kds" class="mt-6 block w-full py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl transition-colors text-center">
               Open Full KDS Display →
-            </button>
+            </NuxtLink>
           </div>
         </section>
 
@@ -377,7 +535,7 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
           <!-- Table Controls Toolbar -->
           <div class="p-6 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 class="font-serif text-lg font-bold text-stone-900">Recent Guest Orders</h3>
+              <h3 class="font-serif text-lg font-bold text-stone-900 border-b-2 border-[#C59237] pb-1.5 mb-1">Recent Guest Orders</h3>
               <p class="text-xs text-stone-400">Manage incoming and active table transactions</p>
             </div>
 
@@ -445,18 +603,18 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
           <div class="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs">
             <div class="flex items-center justify-between mb-6">
               <div>
-                <h3 class="font-serif text-lg font-bold text-stone-900">Top Performing Dishes</h3>
+                <h3 class="font-serif text-lg font-bold text-stone-900  border-b-2 border-[#C59237] pb-1.5 mb-1">Top Performing Dishes</h3>
                 <p class="text-xs text-stone-400">Based on volume metrics this week</p>
               </div>
               <NuxtLink to="/menu" class="text-xs font-semibold text-[#C59237] hover:underline">Full Menu →</NuxtLink>
             </div>
 
             <div class="space-y-4">
-              <div v-for="food in popularFoods" :key="food.id" class="flex items-center justify-between p-2 rounded-xl hover:bg-stone-50 transition-colors">
+              <div v-for="food in popularFoods" :key="food.id" class="flex items-center justify-between p-2 rounded-xl  hover:bg-stone-800  transition-colors">
                 <div class="flex items-center gap-4">
                   <img :src="food.image" :alt="food.name" class="h-14 w-14 rounded-xl object-cover shadow-xs" />
                   <div>
-                    <h4 class="text-xs font-bold text-stone-900">{{ food.name }}</h4>
+                    <h4 class="text-xs font-bold  text-[#828181]">{{ food.name }}</h4>
                     <p class="text-[10px] text-stone-400">{{ food.category }}</p>
                   </div>
                 </div>
@@ -471,7 +629,7 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
           <!-- Quick System Controls -->
           <div class="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs flex flex-col justify-between">
             <div>
-              <h3 class="font-serif text-lg font-bold text-stone-900 mb-1">Staff & Service Control</h3>
+              <h3 class="font-serif text-lg font-bold text-stone-900 mb-1 border-b-2 border-[#C59237] pb-1.5">Staff & Service Control</h3>
               <p class="text-xs text-stone-400 mb-6">Live operational status switches</p>
 
               <div class="space-y-4">
@@ -505,3 +663,5 @@ const updateOrderStatus = (orderId: string, newStatus: string) => {
     </main>
   </div>
 </template>
+
+

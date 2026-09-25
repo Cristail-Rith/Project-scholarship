@@ -76,6 +76,10 @@
     </div>
 
     <!-- Form Inputs -->
+    <div v-if="inquirySubmitted" role="status" class="mb-6 rounded-sm border border-emerald-800 bg-emerald-950/50 p-4 text-sm text-emerald-200">
+      Thank you. Your event inquiry was sent to our event team. We’ll contact you within 24 hours.
+    </div>
+    <p v-if="inquiryError" role="alert" class="mb-6 rounded-sm border border-rose-800 bg-rose-950/50 p-4 text-sm text-rose-200">{{ inquiryError }}</p>
     <form @submit.prevent="submitInquiry" class="space-y-6">
       
       <!-- Row 1: Name & Email -->
@@ -179,9 +183,10 @@
       <div class="text-center pt-4">
         <button 
           type="submit" 
+          :disabled="isSubmitting"
           class="w-full sm:w-auto px-12 py-4 bg-[#C59237] hover:bg-[#b0802c] active:scale-[0.99] text-white text-xs font-semibold uppercase tracking-[0.2em] transition-all rounded-xs shadow-lg shadow-amber-900/20"
         >
-          Submit Event Inquiry
+          {{ isSubmitting ? 'Sending Inquiry...' : 'Submit Event Inquiry' }}
         </button>
       </div>
 
@@ -199,6 +204,7 @@ import CartSidebar from '~/components/CartSidebar.vue'
 import { useCart } from '~/composables/useCart'
 
 useCart()
+const { apiBase } = useApiBase()
 
 const venues = [
   {
@@ -242,8 +248,30 @@ const form = ref({
   notes: ''
 })
 
-const submitInquiry = () => {
-  alert(`Thank you, ${form.value.name}! Your event inquiry has been submitted.`)
+const isSubmitting = ref(false)
+const inquiryError = ref('')
+const inquirySubmitted = ref(false)
+
+const submitInquiry = async () => {
+  inquiryError.value = ''
+  inquirySubmitted.value = false
+  isSubmitting.value = true
+  try {
+    await $fetch('/event-inquiries', {
+      baseURL: apiBase.value,
+      method: 'POST',
+      body: {
+        name: form.value.name,
+        email: form.value.email,
+        phone: form.value.phone,
+        date: form.value.date,
+        guests: form.value.guests,
+        preferred_space: form.value.preferredSpace,
+        event_type: form.value.eventType,
+        notes: form.value.notes,
+      },
+    })
+    inquirySubmitted.value = true
   form.value = {
     name: '',
     email: '',
@@ -253,6 +281,11 @@ const submitInquiry = () => {
     preferredSpace: 'VIP Royal Lounge',
     eventType: 'Corporate Dinner',
     notes: ''
+  }
+  } catch (error) {
+    inquiryError.value = error?.data?.message || 'Could not send your event inquiry. Please try again.'
+  } finally {
+    isSubmitting.value = false
   }
 }
 </script>

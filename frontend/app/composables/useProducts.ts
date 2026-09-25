@@ -7,17 +7,21 @@ interface Product {
   name?: string
   category: string
   price: number
+  previousPrice?: number | null
   rating: string
   description: string
   image: string
   images?: string[]
+  sku?: string
+  status?: string
+  stockQuantity?: number
 }
 
 export function useProducts() {
-  const config = useRuntimeConfig()
+  const { apiBase } = useApiBase()
 
   const { data, pending, error, refresh } = useFetch<Product[]>('/products', {
-    baseURL: config.public.apiBase,
+    baseURL: apiBase.value,
     default: () => [],
   })
 
@@ -26,7 +30,7 @@ export function useProducts() {
       ...product,
       image:
         product.image && !product.image.startsWith('http')
-          ? `${config.public.apiBase}${product.image}`
+          ? `${apiBase.value}${product.image}`
           : product.image,
     })),
   )

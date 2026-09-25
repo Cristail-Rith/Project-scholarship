@@ -7,6 +7,7 @@ import CartSidebar from '~/components/CartSidebar.vue'
 import { useProducts } from '~/composables/useProducts'
 import { useCart } from '~/composables/useCart'
 
+const { apiBase } = useApiBase()
 const activeCategory = ref('All')
 const searchQuery = ref('')
 const route = useRoute()
@@ -14,7 +15,7 @@ const route = useRoute()
 const { products } = useProducts()
 const { items: cart, addToCart, updateQuantity, totalItems: totalCartItems, totalPrice: totalCartPrice, isCartOpen } = useCart()
 const { data: categoryData } = useFetch<any[]>('/categories', {
-  baseURL: useRuntimeConfig().public.apiBase,
+  baseURL: apiBase.value,
   default: () => []
 })
 
@@ -100,7 +101,7 @@ const updateCartQuantity = (id: string | number, delta: number) => {
             class="w-full bg-white border border-stone-200 text-stone-800 placeholder-stone-400 text-xs rounded-md py-2 pl-9 pr-4 focus:outline-none focus:border-amber-600 transition-colors font-medium"
           />
           <svg class="w-4 h-4 text-stone-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0 1 14 0z"/>
           </svg>
         </div>
       </div>
@@ -110,11 +111,11 @@ const updateCartQuantity = (id: string | number, delta: number) => {
         <div 
           v-for="item in filteredMenu" 
           :key="item.id"
-          class="bg-white border border-stone-200 rounded-lg overflow-hidden hover:border-amber-500/50 transition-all duration-300 flex flex-col justify-between group shadow-xs hover:shadow-md cursor-pointer"
+          class="bg-white border border-gray-300  rounded-lg overflow-hidden hover:border-amber-500/50   transition-all duration-300 flex flex-col justify-between group shadow-xs hover:shadow-md cursor-pointer"
           @click="goToProduct(item)"
         >
           <!-- Image Section -->
-          <div class="relative h-52 w-full overflow-hidden bg-stone-100">
+          <div class="relative h-64 w-full overflow-hidden bg-stone-100">
             <img 
               :src="item.image" 
               :alt="item.name || item.title"

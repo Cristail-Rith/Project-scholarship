@@ -1,12 +1,38 @@
-from flask import Blueprint, jsonify, request
+import os
+import uuid
+
+from flask import Blueprint, jsonify, request, current_app, send_from_directory
 from sqlalchemy.exc import IntegrityError
+from werkzeug.utils import secure_filename
 
 from app.extensions import db
+from app.models.reservation import Reservation
 from app.models.restaurant_table import RestaurantTable
 
 bp = Blueprint("tables", __name__)
 
 ALLOWED_STATUSES = {"available", "occupied", "reserved", "cleaning"}
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
+
+
+@bp.get("/uploads/tables/<path:filename>")
+def table_image(filename):
+    upload_folder = os.path.join(os.path.dirname(current_app.config["UPLOAD_FOLDER"]), "tables")
+    return send_from_directory(upload_folder, filename)
+
+
+def save_table_image(image_file):
+    if not image_file or not image_file.filename:
+        return ""
+    safe_name = secure_filename(image_file.filename)
+    extension = safe_name.rsplit(".", 1)[-1].lower() if "." in safe_name else ""
+    if extension not in ALLOWED_IMAGE_EXTENSIONS:
+        return None
+    upload_folder = os.path.join(os.path.dirname(current_app.config["UPLOAD_FOLDER"]), "tables")
+    os.makedirs(upload_folder, exist_ok=True)
+    filename = f"{uuid.uuid4().hex}.{extension}"
+    image_file.save(os.path.join(upload_folder, filename))
+    return f"/uploads/tables/{filename}"
 
 
 def serialize_table(table):
@@ -50,23 +76,33 @@ def get_tables():
 
 @bp.post("/tables")
 def create_table():
-    data = request.get_json(silent=True) or {}
+    data = request.form.to_dict() if request.form else (request.get_json(silent=True) or {})
     table_number = data.get("number", data.get("table_number"))
     seats = data.get("capacity", data.get("seats", 2))
     status = normalize_status(data.get("status", "available"))
 
-    if not isinstance(table_number, int) or table_number < 1:
+    try:
+        table_number = int(table_number)
+        seats = int(seats)
+    except (TypeError, ValueError):
+        return jsonify({"message": "number and capacity must be positive integers"}), 400
+    if table_number < 1:
         return jsonify({"message": "number must be a positive integer"}), 400
-    if not isinstance(seats, int) or seats < 1:
+    if seats < 1:
         return jsonify({"message": "capacity must be a positive integer"}), 400
     if status not in ALLOWED_STATUSES:
         return jsonify({"message": "status is not supported"}), 400
+
+    image_file = request.files.get("image")
+    bg_image = save_table_image(image_file) if image_file else str(data.get("bgImage", "")).strip()
+    if bg_image is None:
+        return jsonify({"message": "Use a JPG, PNG, WEBP, or GIF image under 5 MB"}), 400
 
     table = RestaurantTable(
         table_number=table_number, seats=seats, status=status
         , zone=data.get("zone", "Main Dining"),
         shape=data.get("shape", "square"),
-        bg_image=data.get("bgImage", ""),
+        bg_image=bg_image,
     )
     db.session.add(table)
     try:
@@ -84,18 +120,24 @@ def update_table(table_id):
     if not table:
         return jsonify({"message": "table not found"}), 404
 
-    data = request.get_json(silent=True) or {}
+    data = request.form.to_dict() if request.form else (request.get_json(silent=True) or {})
     if "number" in data or "table_number" in data:
-        table_number = data.get("number", data.get("table_number"))
-        if not isinstance(table_number, int) or table_number < 1:
+        try:
+            table_number = int(data.get("number", data.get("table_number")))
+        except (TypeError, ValueError):
+            return jsonify({"message": "number must be a positive integer"}), 400
+        if table_number < 1:
             return jsonify(
                 {"message": "number must be a positive integer"}
             ), 400
         table.table_number = table_number
 
     if "capacity" in data or "seats" in data:
-        seats = data.get("capacity", data.get("seats"))
-        if not isinstance(seats, int) or seats < 1:
+        try:
+            seats = int(data.get("capacity", data.get("seats")))
+        except (TypeError, ValueError):
+            return jsonify({"message": "capacity must be a positive integer"}), 400
+        if seats < 1:
             return jsonify(
                 {"message": "capacity must be a positive integer"}
             ), 400
@@ -110,7 +152,13 @@ def update_table(table_id):
         table.zone = str(data["zone"])
     if "shape" in data:
         table.shape = str(data["shape"])
-    if "bgImage" in data:
+    image_file = request.files.get("image")
+    if image_file:
+        bg_image = save_table_image(image_file)
+        if bg_image is None:
+            return jsonify({"message": "Use a JPG, PNG, WEBP, or GIF image under 5 MB"}), 400
+        table.bg_image = bg_image
+    elif "bgImage" in data:
         table.bg_image = str(data["bgImage"])
 
     try:
@@ -128,6 +176,18 @@ def delete_table(table_id):
     if not table:
         return jsonify({"message": "table not found"}), 404
 
+    if Reservation.query.filter_by(table_id=table.id).first():
+        return jsonify({
+            "message": "This table has reservation history and cannot be deleted. Change its status or details instead."
+        }), 409
+
     db.session.delete(table)
     db.session.commit()
     return jsonify({"message": "table deleted"}), 200
+
+
+
+
+
+
+

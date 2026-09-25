@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import Navbar from '~/components/Navbar.vue'
 import { useAuth } from '~/composables/useAuth'
 
+const { apiBase } = useApiBase()
+
 definePageMeta({
   middleware: 'auth'
 })
@@ -56,7 +58,6 @@ interface Reservation {
 
 const { user, token, logout } = useAuth()
 const router = useRouter()
-const config = useRuntimeConfig()
 
 const profileUser = ref<ProfileUser | null>(null)
 const orders = ref<Order[]>([])
@@ -186,7 +187,7 @@ const avatarUrl = computed(() => {
 
   return avatar.startsWith('http')
     ? avatar
-    : `${config.public.apiBase}${avatar}`
+    : `${apiBase.value}${avatar}`
 })
 
 const previewAvatarUrl = ref('')
@@ -198,7 +199,7 @@ const previewAvatarUrl = ref('')
 const resolveImageUrl = (imagePath?: string) => {
   if (!imagePath) return ''
   if (imagePath.startsWith('http')) return imagePath
-  return `${config.public.apiBase}${imagePath}`
+  return `${apiBase.value}${imagePath}`
 }
 
 const formatCurrency = (amount: number) => {
@@ -306,7 +307,7 @@ async function fetchProfile() {
 
   try {
     const response = await $fetch<{ user: ProfileUser }>('/me', {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       headers: {
         Authorization: `Bearer ${token.value}`
       }
@@ -327,7 +328,7 @@ async function fetchOrders() {
 
   try {
     const response = await $fetch<Order[]>('/orders', {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       headers: {
         Authorization: `Bearer ${token.value}`
       }
@@ -354,7 +355,7 @@ async function fetchReservations() {
     const response = await $fetch<
       Reservation[] | { reservations?: Reservation[] }
     >('/reservations', {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       headers: {
         Authorization: `Bearer ${token.value}`
       }
@@ -451,7 +452,7 @@ async function saveProfile() {
     }
 
     await $fetch('/me', {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token.value}`,
@@ -469,7 +470,7 @@ async function saveProfile() {
       )
 
       await $fetch('/me/avatar', {
-        baseURL: config.public.apiBase,
+        baseURL: apiBase.value,
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token.value}`
@@ -784,7 +785,7 @@ onMounted(async () => {
                   aria-label="Logout"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 11-2 2v-1m0-11V5a2 2 0 112-2v1m0 0h.01M9 5a3 3 0 116 0v1H9z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 11-2 2v-1m0-11V5a2 2 0 1 1 2-2v1m0 0h.01M9 5a3 3 0 1 1 6 0v1H9z"></path>
                   </svg>
                 </button>
               </div>

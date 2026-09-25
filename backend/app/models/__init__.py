@@ -6,6 +6,8 @@ from app.models.order_item import OrderItem
 from app.models.restaurant_table import RestaurantTable
 from app.models.reservation import Reservation
 from app.models.contact_detail import ContactDetail
+from app.models.event_inquiry import EventInquiry
+from app.models.contact_message import ContactMessage
 
 __all__ = [
     "User",
@@ -16,4 +18,6 @@ __all__ = [
     "RestaurantTable",
     "Reservation",
     "ContactDetail",
+    "EventInquiry",
+    "ContactMessage",
 ]

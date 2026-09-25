@@ -5,6 +5,7 @@ from app.extensions import db
 from app.models.order import Order
 from app.models.order_item import OrderItem
 from app.models.product import Product
+from app.models.restaurant_table import RestaurantTable
 from app.models.user import User
 
 bp = Blueprint("orders", __name__)
@@ -34,10 +35,32 @@ def create_order():
 
     order_type = str(data.get("order_type", "dine-in")).strip().lower()
     payment_method = str(data.get("payment_method", "cash")).strip().lower()
+    if user.role == "customer":
+        if order_type != "dine-in":
+            return jsonify({"message": "Customer accounts can place dine-in orders only"}), 403
+        # Regular customers place orders without online checkout; payment is handled at the restaurant.
+        payment_method = "cash"
     if order_type not in ALLOWED_ORDER_TYPES:
         return jsonify({"message": "Invalid order type"}), 400
     if payment_method not in ALLOWED_PAYMENT_METHODS:
         return jsonify({"message": "Invalid payment method"}), 400
+
+    selected_table = None
+    if order_type == "dine-in":
+        try:
+            table_number = int(data.get("table_number"))
+        except (TypeError, ValueError):
+            return jsonify({"message": "Choose an available table for dine-in"}), 400
+        selected_table = (
+            RestaurantTable.query
+            .filter_by(table_number=table_number)
+            .with_for_update()
+            .first()
+        )
+        if not selected_table:
+            return jsonify({"message": "That table does not exist"}), 404
+        if selected_table.status != "available":
+            return jsonify({"message": "That table is no longer available. Choose another table."}), 409
 
     order_items = []
     total_price = 0.0
@@ -91,10 +114,12 @@ def create_order():
         customer_name=str(data.get("customer_name", user.username)).strip(),
         customer_email=str(data.get("customer_email", user.email)).strip(),
         customer_phone=str(data.get("customer_phone", user.phone or "")).strip() or None,
-        table_number=str(data.get("table_number", "")).strip() or None,
+        table_number=str(selected_table.table_number) if selected_table else None,
         delivery_address=str(data.get("delivery_address", "")).strip() or None,
         items=order_items,
     )
+    if selected_table:
+        selected_table.status = "occupied"
     db.session.add(order)
     try:
         db.session.commit()

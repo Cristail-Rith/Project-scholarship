@@ -1,0 +1,42 @@
+149:                 {{ product.category || 'Limited Batch' }}
+150:               </span>
+151: 
+152:               <!-- Star Rating Indicator -->
+153:               <div class="flex items-center gap-1 text-xs text-amber-600 font-semibold">
+154:                 <span>★</span>
+155:                 <span>4.9</span>
+156:                 <span class="text-[#8C857E] font-normal">(28)</span>
+157:               </div>
+158:             </div>
+159: 
+160:             <!-- Title -->
+161:             <h1 class="mt-3 font-serif text-3xl sm:text-4xl text-[#221F1D] tracking-tight leading-snug">
+162:               {{ product.title }}
+163:             </h1>
+164: 
+165:             <!-- Price & Highlight Line -->
+166:             <div class="mt-4 flex items-baseline gap-3 border-b border-[#E2DBD0] pb-5">
+167:               <span class="font-serif text-3xl font-bold text-[#221F1D]">${{ product.price.toFixed(2) }}</span>
+168:               <span class="text-xs text-amber-700 font-medium bg-amber-100/60 px-2 py-0.5 rounded">Free Express Shipping</span>
+169:             </div>
+170: 
+171:             <!-- Description -->
+172:             <p class="mt-5 text-xs sm:text-sm leading-relaxed text-[#5A544E]">
+173:               {{ product.description }}
+174:             </p>
+175: 
+176:             <!-- Quantity & Purchasing Panel -->
+177:             <div class="mt-8 space-y-4 border-b border-[#E2DBD0] pb-7">
+178:               <label class="block text-[10px] font-bold uppercase tracking-widest text-[#7A746E]">Select Quantity</label>
+179:               
+180:               <div class="flex gap-3">
+181:                 <!-- Stepper -->
+182:                 <div class="inline-flex items-center border border-[#C8C1B4] bg-[#FDFBF7] rounded-lg">
+183:                   <button 
+184:                     type="button" 
+185:                     class="h-11 w-11 flex items-center justify-center text-[#5A544E] hover:text-amber-600 hover:bg-[#EAE5DC] transition-colors disabled:opacity-30 rounded-l-lg" 
+186:                     :disabled="quantity <= 1"
+187:                     @click="decreaseQty"
+188:                     aria-label="Decrease quantity"
+189:                   >
+190:                     &#8722;

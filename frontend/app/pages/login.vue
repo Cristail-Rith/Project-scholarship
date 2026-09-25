@@ -143,9 +143,16 @@ const handleLogin = async () => {
   try {
     const response = await login(email.value, password.value)
     message.value = 'Login successful!'
-    await navigateTo(response.user.role === 'admin' ? '/admin' : '/')
+    const target = response.user.role === 'admin' ? '/admin' : '/'
+    // Ensure state is synchronized, then navigate
+    if (import.meta.client) {
+      localStorage.setItem('access_token', response.access_token)
+      localStorage.setItem('auth-user', JSON.stringify(response.user))
+    }
+    await navigateTo(target, { replace: true })
   } catch (error) {
-    message.value = error?.data?.message || 'Invalid email or password.'
+    console.error('Login error:', error)
+    message.value = error?.data?.message || 'Login failed. Please check your credentials.'
   }
 }
 </script>

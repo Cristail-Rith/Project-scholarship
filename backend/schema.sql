@@ -95,8 +95,8 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 CREATE TABLE IF NOT EXISTS reservations (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    table_id INT NOT NULL,
+    user_id INT NULL,
+    table_id INT NULL,
     reserved_for DATETIME NOT NULL,
     guests INT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
@@ -104,6 +104,10 @@ CREATE TABLE IF NOT EXISTS reservations (
     guest_name VARCHAR(160),
     guest_email VARCHAR(120),
     guest_phone VARCHAR(40),
+    booking_type VARCHAR(20) NOT NULL DEFAULT 'dining',
+    area_name VARCHAR(100) NOT NULL DEFAULT 'Main Dining Room',
+    occasion VARCHAR(100) NOT NULL DEFAULT 'Casual Fine Dining',
+    dietary_preferences VARCHAR(500) NOT NULL DEFAULT '[]',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_reservation_guests CHECK (guests > 0),
     CONSTRAINT fk_reservations_user
@@ -112,6 +116,33 @@ CREATE TABLE IF NOT EXISTS reservations (
     CONSTRAINT fk_reservations_table
         FOREIGN KEY (table_id) REFERENCES restaurant_tables (id)
         ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS event_inquiries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(160) NOT NULL,
+    email VARCHAR(254) NOT NULL,
+    phone VARCHAR(40) NOT NULL,
+    event_date DATE NOT NULL,
+    guests INT NOT NULL,
+    preferred_space VARCHAR(100) NOT NULL,
+    event_type VARCHAR(100) NOT NULL,
+    notes TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'new',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_event_inquiry_guests CHECK (guests BETWEEN 5 AND 150)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(160) NOT NULL,
+    email VARCHAR(254) NOT NULL,
+    phone VARCHAR(40) NOT NULL,
+    preferred_date DATE NULL,
+    guests INT NOT NULL DEFAULT 2,
+    message TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'new',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS contact_details (

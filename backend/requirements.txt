@@ -6,3 +6,5 @@ flask-bcrypt
 flask-cors
 python-dotenv
 PyMySQL
+pillow
+bakong-khqr[image]

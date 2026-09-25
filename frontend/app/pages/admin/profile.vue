@@ -3,7 +3,8 @@ import { ref, computed, onMounted } from "vue"
 
 import AdminSidebar from "~/components/AdminSidebar.vue"
 import { useAuth } from "~/composables/useAuth"
-import { useRuntimeConfig } from "#imports"
+
+const { apiBase } = useApiBase()
 
 interface AdminUser {
   name: string
@@ -19,7 +20,6 @@ interface AdminUser {
 const activeTab = ref<"overview" | "settings" | "security">("overview")
 
 const { user, token } = useAuth()
-const config = useRuntimeConfig()
 
 // Password form state
 const currentPassword = ref("")
@@ -77,7 +77,7 @@ const avatarUrl = computed(() => {
     return admin.value.avatar
   }
 
-  return config.public.apiBase + admin.value.avatar
+  return apiBase.value + admin.value.avatar
 })
 
 // Load user data on client side
@@ -95,7 +95,7 @@ onMounted(async () => {
 
   try {
     const res = await $fetch<{ user: any }>("/me", {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       headers: {
         Authorization: `Bearer ${token.value}`,
       },
@@ -146,7 +146,7 @@ const handleAvatarUpload = async (event: Event) => {
     formData.append("avatar", file)
 
     const res = await $fetch<{ user: any }>("/me/avatar", {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token.value}`,
@@ -177,7 +177,7 @@ const handleSave = async () => {
     }
 
     const res = await $fetch<{ user: any }>("/me", {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token.value}`,
@@ -225,7 +225,7 @@ const updatePassword = async () => {
 
   try {
     const res = await $fetch<{ user: any }>("/me", {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token.value}`,

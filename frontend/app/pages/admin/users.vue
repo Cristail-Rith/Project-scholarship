@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '~/composables/useAuth'
-import { useRuntimeConfig } from '#imports'
+
+const { apiBase } = useApiBase()
 
 definePageMeta({ middleware: 'admin' })
 
@@ -24,7 +25,6 @@ interface ApiUser {
 }
 
 const { user, token } = useAuth()
-const config = useRuntimeConfig()
 
 const users = ref<User[]>([])
 const loading = ref(true)
@@ -48,7 +48,7 @@ const editingUser = ref<ApiUser>({
 })
 
 const totalUsers = computed(() => users.value.length)
-const activeUsersCount = computed(() => users.value.filter(u => u.role === 'customer').length)
+const activeUsersCount = computed(() => users.value.filter(u => u.role !== 'admin').length)
 
 const filteredUsers = computed(() => {
   return users.value.filter(user => {
@@ -66,6 +66,10 @@ const getRoleBadgeClass = (role: string) => {
   }
 }
 
+const getRoleLabel = (role: string) => role === 'online_customer'
+  ? 'Online Customer'
+  : role.charAt(0).toUpperCase() + role.slice(1)
+
 const toggleStatus = (user: User) => {
   // No status in user model, remove status cycling
 }
@@ -79,7 +83,7 @@ async function fetchUsers() {
   }
   try {
     const response = await $fetch<{ users: ApiUser[] }>('/users', {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       headers: {
         Authorization: `Bearer ${authToken}`
       }
@@ -113,7 +117,9 @@ const openEditModal = (user: User) => {
   isEditing.value = true
   editingUser.value = { ...user }
   avatarFile.value = null
-  avatarPreview.value = user.avatar || ''
+  avatarPreview.value = user.avatar
+    ? (user.avatar.startsWith('http') ? user.avatar : apiBase.value + user.avatar)
+    : ''
   isModalOpen.value = true
 }
 
@@ -144,14 +150,14 @@ const saveUser = async () => {
   try {
     if (isEditing.value && editingUser.value.id) {
       await $fetch(`/users/${editingUser.value.id}`, {
-        baseURL: config.public.apiBase,
+        baseURL: apiBase.value,
         method: 'PUT',
         body: formData,
         headers: { Authorization: `Bearer ${authToken}` },
       })
     } else {
       await $fetch('/users', {
-        baseURL: config.public.apiBase,
+        baseURL: apiBase.value,
         method: 'POST',
         body: formData,
         headers: { Authorization: `Bearer ${authToken}` },
@@ -173,7 +179,7 @@ const deleteUser = async (id: number) => {
   }
   try {
     await $fetch(`/users/${id}`, {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       method: 'DELETE',
       headers: { Authorization: `Bearer ${authToken}` },
     })
@@ -205,7 +211,7 @@ const deleteUser = async (id: number) => {
               class="w-64 rounded-lg border border-stone-300 bg-stone-50 px-4 py-2 pl-9 text-xs text-stone-800 placeholder-stone-400 focus:border-amber-600 focus:bg-white focus:outline-none transition-all"
             />
             <svg class="absolute left-3 top-2.5 h-4 w-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0 1 14 0z"/>
             </svg>
           </div>
         </div>
@@ -221,7 +227,7 @@ const deleteUser = async (id: number) => {
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 43a8 8 0 100-16 8 8 0 000 16zM21 20a6 6 0 100-12 6 6 0 000 12zM3 20a6 6 0 100-12 6 6 0 000 12z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 43a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 20a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM3 20a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"/>
               </svg>
             </div>
           </div>
@@ -233,7 +239,7 @@ const deleteUser = async (id: number) => {
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0 1 18 0z"/>
               </svg>
             </div>
           </div>
@@ -245,7 +251,7 @@ const deleteUser = async (id: number) => {
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-stone-100 text-stone-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
               </svg>
             </div>
           </div>
@@ -260,8 +266,9 @@ const deleteUser = async (id: number) => {
                 class="rounded-md border border-stone-300 bg-stone-50 px-3 py-1.5 text-xs text-stone-800 focus:border-amber-600 focus:outline-none"
               >
                 <option value="All">All Roles</option>
-                <option value="admin">Admin</option>
-                <option value="customer">Customer</option>
+                 <option value="admin">Admin</option>
+                 <option value="customer">Customer</option>
+                 <option value="online_customer">Online Customer</option>
               </select>
             </div>
           </div>
@@ -289,7 +296,7 @@ const deleteUser = async (id: number) => {
                     <div class="flex items-center gap-3">
                       <img
                         v-if="user.avatar"
-                        :src="user.avatar.startsWith('http') ? user.avatar : config.public.apiBase + user.avatar"
+                        :src="user.avatar.startsWith('http') ? user.avatar : apiBase + user.avatar"
                         :alt="user.username"
                         class="h-12 w-12 rounded-full object-cover border-2 border-[#C59237] shadow-sm"
                       />
@@ -301,7 +308,7 @@ const deleteUser = async (id: number) => {
                       </div>
                       <div>
                         <span class="font-bold text-stone-900 text-sm block">{{ user.username }}</span>
-                        <span class="text-[10px] text-stone-400 font-mono">#{{ user.id }} · {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}</span>
+                          <span class="text-[10px] text-stone-400 font-mono">#{{ user.id }} · {{ getRoleLabel(user.role) }}</span>
                       </div>
                     </div>
                   </td>
@@ -311,7 +318,7 @@ const deleteUser = async (id: number) => {
                       :class="getRoleBadgeClass(user.role)"
                       class="px-2.5 py-0.5 rounded border text-[10px] font-bold tracking-wide"
                     >
-                      {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
+                       {{ getRoleLabel(user.role) }}
                     </span>
                   </td>
 
@@ -331,7 +338,7 @@ const deleteUser = async (id: number) => {
                         title="Edit User"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                       </button>
 
@@ -341,7 +348,7 @@ const deleteUser = async (id: number) => {
                         title="Delete User"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
                       </button>
                     </div>
@@ -449,6 +456,7 @@ const deleteUser = async (id: number) => {
                 class="w-full rounded-lg border border-stone-300 bg-stone-50 p-2.5 text-stone-800 focus:border-amber-600 focus:bg-white focus:outline-none"
               >
                 <option value="customer">Customer</option>
+                <option value="online_customer">Online Customer</option>
                 <option value="admin">Admin</option>
               </select>
             </div>

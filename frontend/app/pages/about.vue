@@ -66,14 +66,14 @@ const developers = ref([
     name: 'Developer One', // Replace with actual name
     role: 'Lead Frontend  and Backned Engineer',
     bio: 'Crafting seamless user experiences through modern Web standards and thoughtful UI and Backend engineering .',
-    image: 'https://scontent.fpnh18-5.fna.fbcdn.net/v/t39.30808-1/713783939_122260723340162078_3533463879582817884_n.jpg?stp=dst-jpg_tt6&cstp=mx832x836&ctp=s200x200&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=1d2534&_nc_eui2=AeFc7MI9F7Bz_llyiOPjrJgTsRslBsorVQCxGyUGyitVAIvr2wTp9nD8Olhi6FUvBFPOQ0hwFXg9o1tQ60v-JWHB&_nc_ohc=G04wP44eJeYQ7kNvwFAi4GN&_nc_oc=Adq1I7OFXDRi3E9TmMmQRRLwPCy-BSM6kf7-R2MpzJhzSPkupqr2u0sV11xCQro8zZU&_nc_zt=24&_nc_ht=scontent.fpnh18-5.fna&_nc_gid=zTRMB8mxP5LFcUkaJ24Eng&_nc_ss=7b2a8&oh=00_AQK48LQkrXGxn6ry2pin4eYo8nFdTWihcmRnkntqUpSKBQ&oe=6AAED032', // Professional Studio Photo
+    image: 'https://scontent.fpnh18-5.fna.fbcdn.net/v/t39.30808-6/713783939_122260723340162078_3533463879582817884_n.jpg?stp=dst-jpg_tt6&cstp=mx832x836&ctp=s832x836&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFc7MI9F7Bz_llyiOPjrJgTsRslBsorVQCxGyUGyitVAIvr2wTp9nD8Olhi6FUvBFPOQ0hwFXg9o1tQ60v-JWHB&_nc_ohc=qTOTlQXipz4Q7kNvwHB4ykS&_nc_oc=AdqGN7k6rt_SuGBmw-8uTreNMl7dpENP-wjpBRAg9XloydCc8mVkLLWGBPsxHvnKUwg&_nc_zt=23&_nc_ht=scontent.fpnh18-5.fna&_nc_gid=UnyWCGM3-_oXEspmTcKG8A&_nc_ss=7b2a8&oh=00_AQJGKbQS_NbHm0kmCwIQTBo318sjmKzJzoF9a9wurs-Zlg&oe=6ABAC4D5', // Professional Studio Photo
     tags: ['Vue 3', 'Nuxt', 'Tailwind CSS']
   },
   {
     name: 'Developer Two', // Replace with actual name
     role: 'Full Stack Architect Frontend Debug',
     bio: 'Blending cultural heritage and modern code structures to create performant, meaningful web applications.',
-    image: 'https://scontent.fpnh5-1.fna.fbcdn.net/v/t39.30808-6/735178793_1772718847442991_7811778051066388255_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1080&ctp=s1080x1080&_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFVrzeMjFXrVZdXg4MC87oiUDefIyHUkRtQN58jIdSRG2f5jaVMrsXeamcOKJfjTCHt8IoY05E3lN7xaNFpGHYd&_nc_ohc=WC-lIgFAYo4Q7kNvwGkxtxh&_nc_oc=Adocf4sZ5OLJ1izV9d3kYZOLZPTchiz0drFhlmgyqH--esbsjdkv-RNFB16c_Cvuzj8&_nc_zt=23&_nc_ht=scontent.fpnh5-1.fna&_nc_gid=n-qnTXwT6wy-qhQpna4vUw&_nc_ss=7b2a8&oh=00_AQIjhffgCSURk6UHxJ6FfdAt5LzPUFes9LDgEYRAN9fddw&oe=6AAEEC3F', // Cultural / Temple Photo
+    image: 'https://scontent.fpnh5-1.fna.fbcdn.net/v/t39.30808-6/735178793_1772718847442991_7811778051066388255_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1080&ctp=s1080x1080&_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFVrzeMjFXrVZdXg4MC87oiUDefIyHUkRtQN58jIdSRG2f5jaVMrsXeamcOKJfjTCHt8IoY05E3lN7xaNFpGHYd&_nc_ohc=KdWu0OxZ0jgQ7kNvwE7IcNi&_nc_oc=AdrjT388IjvZxwwyXlEcV3h7RwufmvTDYuIrODD0D3SBUfDAHWbTz9i-G1eJC5-VBck&_nc_zt=23&_nc_ht=scontent.fpnh5-1.fna&_nc_gid=uvskhXiWTQNzmdqD7iRhag&_nc_ss=7b2a8&oh=00_AQJW3H6ZZ6erwvpTx39QkzXqcP5-j_s5YgEiCLAde_FkYQ&oe=6ABA917F', // Cultural / Temple Photo
     tags: ['Architecture', 'TypeScript', 'Node.js']
   }
 ])

@@ -14,7 +14,7 @@ interface AuthResponse {
 }
 
 export function useAuth() {
-	const config = useRuntimeConfig()
+	const API_URL = 'http://localhost:5000'
 	const user = useState<User | null>('auth-user', () => null)
 	const token = useState<string | null>('auth-token', () => null)
 
@@ -30,8 +30,9 @@ export function useAuth() {
 
 	async function login(email: string, password: string) {
 		const response = await $fetch<AuthResponse>('/login', {
-			baseURL: config.public.apiBase,
+			baseURL: API_URL,
 			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
 			body: { email, username: email, password },
 		})
 		token.value = response.access_token
@@ -45,8 +46,9 @@ export function useAuth() {
 
 	async function register(username: string, email: string, phone: string, password: string) {
 		return await $fetch<{ message: string; user: User }>('/register', {
-			baseURL: config.public.apiBase,
+			baseURL: API_URL,
 			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
 			body: { username, email, phone, password },
 		})
 	}

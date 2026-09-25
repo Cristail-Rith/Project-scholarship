@@ -5,11 +5,11 @@
   <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center tracking-wide">
     <div class="flex items-center gap-6">
       <a href="tel:+85523123456" class="flex items-center gap-2 hover:text-[#C59237] transition-colors">
-        <svg class="w-3.5 h-3.5 shrink-0 text-[#C59237]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+        <svg class="w-3.5 h-3.5 shrink-0 text-[#C59237]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 0 1 2-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 0 0 5.516 5.516l1.13-2.257a1 1 0 0 1 1.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
         <span><a href="tel:+855 16555091">+855 16555091</a></span>
       </a>
       <a href="mailto:reservations@flavoria.com" class="flex items-center gap-0 hover:text-[#C59237] transition-colors">
-        <svg class="w-3.5 h-3.5 shrink-0 text-[#C59237]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+        <svg class="w-3.5 h-3.5 shrink-0 text-[#C59237]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 0 0 2 2z" /></svg>
         <span><a href="mailto:sovvanrith72@gmail.com">sovvanrith72@gmail.com</a></span>
       </a>
     </div>
@@ -91,9 +91,9 @@
         <div class="w-16 h-16 bg-amber-100 text-[#C59237] rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
           ✓
         </div>
-        <h2 class="font-serif text-2xl sm:text-3xl text-stone-900">Reservation Confirmed!</h2>
+        <h2 class="font-serif text-2xl sm:text-3xl text-stone-900">Reservation Request Received!</h2>
         <p class="text-stone-600 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
-          Thank you, <strong class="text-stone-900">{{ form.firstName }} {{ form.lastName }}</strong>. We look forward to welcoming you to FLAVORIA. A confirmation email has been dispatched to <strong>{{ form.email }}</strong>.
+          Thank you, <strong class="text-stone-900">{{ form.firstName }} {{ form.lastName }}</strong>. Our team will review your {{ selectedArea.name }} request and contact you at <strong>{{ form.email }}</strong> to confirm the booking.
         </p>
         
         <div class="bg-[#FAF8F5] border border-stone-200 rounded-lg p-5 text-left text-xs space-y-2 max-w-md mx-auto">
@@ -124,9 +124,9 @@
         <!-- Party Size Selector -->
         <div>
           <label class="block text-stone-700 text-xs font-semibold uppercase tracking-wider mb-2">Number of Guests</label>
-          <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
+          <div class="grid grid-cols-4 sm:grid-cols-5 gap-2">
             <button
-              v-for="count in [1, 2, 3, 4, 5, 6, 7, 8]"
+              v-for="count in 20"
               :key="count"
               type="button"
               @click="form.guests = count"
@@ -197,12 +197,13 @@
         <div>
           <label class="block text-stone-700 text-xs font-semibold uppercase tracking-wider mb-2">Dining Atmosphere</label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div
+            <button
               v-for="area in diningAreas"
               :key="area.id"
-              @click="form.areaId = area.id"
+              @click="chooseArea(area)"
+              type="button"
               :class="[
-                'p-4 rounded-lg border cursor-pointer transition-all flex flex-col justify-between',
+                'p-4 rounded-lg border cursor-pointer transition-all flex flex-col justify-between text-left',
                 form.areaId === area.id ? 'border-[#C59237] bg-amber-50/40 ring-1 ring-[#C59237]' : 'border-stone-200 bg-[#FAF8F5] hover:border-stone-300'
               ]"
             >
@@ -214,7 +215,16 @@
                 <p class="text-[11px] text-stone-500 leading-relaxed">{{ area.description }}</p>
               </div>
               <span class="text-[10px] uppercase tracking-wider text-amber-800 font-semibold mt-3 block">{{ area.tag }}</span>
-            </div>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-hidden rounded-xl border border-amber-200 bg-[#FAF8F5] sm:flex">
+          <img :src="selectedArea.image" :alt="selectedArea.name" class="h-44 w-full object-cover sm:h-auto sm:w-2/5" />
+          <div class="space-y-3 p-5 sm:p-6">
+            <div><span class="text-[10px] font-bold uppercase tracking-[.18em] text-amber-700">Selected room details</span><h3 class="mt-1 font-serif text-xl text-stone-900">{{ selectedArea.name }}</h3></div>
+            <p class="text-xs leading-relaxed text-stone-600">{{ selectedArea.details }}</p>
+            <div class="flex flex-wrap gap-2 text-[10px] font-semibold text-stone-700"><span class="rounded-full bg-white px-3 py-1.5">{{ selectedArea.capacity }}</span><span class="rounded-full bg-white px-3 py-1.5">{{ selectedArea.tag }}</span></div>
           </div>
         </div>
 
@@ -231,11 +241,12 @@
         </div>
 
         <!-- Available Tables from Database -->
-        <div v-if="availableTables.length">
-          <label class="block text-stone-700 text-xs font-semibold uppercase tracking-wider mb-2">Select Table from Floor Plan</label>
+        <div>
+          <label class="block text-stone-700 text-xs font-semibold uppercase tracking-wider mb-2">Available Tables · {{ selectedArea.name }}</label>
+          <p class="mb-3 text-[11px] text-stone-500">Choose a table in this space, or leave it unselected and our team will assign one.</p>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <button
-              v-for="table in availableTables"
+              v-for="table in areaTables"
               :key="table.id"
               type="button"
               @click="selectTable(table)"
@@ -251,9 +262,8 @@
               <p v-if="selectedTable?.id === table.id" class="text-[10px] text-[#C59237] font-bold mt-1">Selected</p>
             </button>
           </div>
+          <p v-if="!areaTables.length" class="mt-3 rounded-lg border border-stone-200 bg-white p-3 text-xs text-stone-600">No matching tables are currently available in this space. You can still send the request and the team will follow up about availability.</p>
         </div>
-
-        <p v-else class="text-xs text-stone-500">Loading available tables...</p>
 
         <div class="pt-4 flex justify-between items-center">
           <button type="button" @click="currentStep = 1" class="text-xs text-stone-500 hover:text-stone-800 underline font-medium">
@@ -357,7 +367,7 @@
 
         <div class="flex justify-between items-center py-2 border-b border-stone-800/60">
           <span class="text-stone-400">Selected Table:</span>
-          <span class="font-semibold text-[#C59237]">{{ selectedTable ? `Table ${selectedTable.number}` : 'Auto-assigned' }}</span>
+          <span class="font-semibold text-[#C59237]">{{ selectedTable ? `Table ${selectedTable.number}` : (areaTables.length ? 'Assign for me' : 'Team to assign') }}</span>
         </div>
 
         <div class="flex justify-between items-center py-2 border-b border-stone-800/60">
@@ -378,7 +388,7 @@
       <!-- Guarantee Badge -->
       <div class="bg-[#26221F] p-4 rounded-lg border border-stone-800 flex items-start gap-3 text-xs text-stone-400 font-light">
         <svg class="w-5 h-5 text-[#C59237] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
         </svg>
         <div>
           <strong class="block text-stone-200 font-semibold mb-0.5">Instant Booking Guarantee</strong>
@@ -519,6 +529,8 @@
 <script setup>
 import { computed, reactive, ref, onMounted } from 'vue'
 
+const { apiBase } = useApiBase()
+
 const mobileMenuOpen = ref(false)
 const currentStep = ref(1)
 const bookingConfirmed = ref(false)
@@ -526,7 +538,6 @@ const reservationCode = ref('')
 const activePeriod = ref('dinner')
 const reservationError = ref('')
 const isSubmitting = ref(false)
-const config = useRuntimeConfig()
 const { token } = useAuth()
 
 const availableTables = ref([])
@@ -538,6 +549,7 @@ const form = reactive({
   time: '7:00 PM',
   areaId: 1,
   occasion: 'Casual Fine Dining',
+  bookingType: 'dining',
   firstName: '',
   lastName: '',
   email: '',
@@ -556,10 +568,11 @@ const periodSlots = {
 const currentPeriodSlots = computed(() => periodSlots[activePeriod.value])
 
 const diningAreas = [
-  { id: 1, name: 'Main Dining Room', description: 'Our signature setting for an elegant evening.', tag: 'Classic atmosphere' },
-  { id: 2, name: 'Garden Terrace', description: 'An open-air table surrounded by quiet greenery.', tag: 'Al fresco dining' },
-  { id: 3, name: "Chef's Counter", description: 'A front-row seat to the rhythm of our kitchen.', tag: 'Interactive experience' },
-  { id: 4, name: 'Private Dining', description: 'A secluded setting for celebrations and milestones.', tag: 'By request' },
+  { id: 1, name: 'Main Dining Room', description: 'Our signature setting for an elegant evening.', details: 'A lively, refined dining room with comfortable table seating and full restaurant service. Ideal for everyday dining and special dinners.', capacity: '2–8 guests', zone: 'Main Dining', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80', tag: 'Classic atmosphere', bookingType: 'dining' },
+  { id: 2, name: 'Garden Terrace', description: 'An open-air table surrounded by quiet greenery.', details: 'An open-air setting with garden views and a relaxed atmosphere. A lovely choice for daytime dining and intimate celebrations.', capacity: '2–6 guests', zone: 'Terrace', image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=900&q=80', tag: 'Al fresco dining', bookingType: 'dining' },
+  { id: 3, name: "Chef's Counter", description: 'A front-row seat to the rhythm of our kitchen.', details: 'Sit close to the chefs and enjoy an interactive dining experience with a view into the kitchen.', capacity: '1–4 guests', zone: 'Bar', image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=900&q=80', tag: 'Interactive experience', bookingType: 'dining' },
+  { id: 4, name: 'Private Dining', description: 'A secluded setting for celebrations and milestones.', details: 'A quiet, dedicated room for family celebrations, business dinners, and other gatherings that need a little more privacy.', capacity: '4–12 guests', zone: 'VIP Lounge', image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=900&q=80', tag: 'By request', bookingType: 'private' },
+  { id: 5, name: 'VIP Suite', description: 'A private room with dedicated service for exclusive gatherings.', details: 'An exclusive suite with dedicated service for private celebrations and important occasions. Our coordinator will confirm room availability and arrangements.', capacity: '8–20 guests', zone: 'VIP Lounge', image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=900&q=80', tag: 'Room booking', bookingType: 'room' },
 ]
 
 const dietaryOptions = ['Vegetarian', 'Vegan', 'Gluten-free', 'Nut allergy', 'Dairy-free', 'No seafood']
@@ -567,7 +580,7 @@ const dietaryOptions = ['Vegetarian', 'Vegan', 'Gluten-free', 'Nut allergy', 'Da
 const loadAvailableTables = async () => {
   try {
     const tables = await $fetch('/tables', {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
     })
     availableTables.value = tables.filter(t => t.status === 'Available')
   } catch (error) {
@@ -576,16 +589,21 @@ const loadAvailableTables = async () => {
 }
 
 const selectedArea = computed(() => {
-  if (selectedTable.value) {
-    const zone = selectedTable.value.zone
-    return diningAreas.find(a => a.name.toLowerCase().includes(zone.toLowerCase().split(' ')[0])) || diningAreas[0]
-  }
   return diningAreas.find((area) => area.id === form.areaId) || diningAreas[0]
 })
 
+const areaTables = computed(() => availableTables.value.filter(table =>
+  table.zone === selectedArea.value.zone && Number(table.capacity) >= Number(form.guests)
+))
+
+const chooseArea = (area) => {
+  form.areaId = area.id
+  form.bookingType = area.bookingType
+  selectedTable.value = null
+}
+
 const selectTable = (table) => {
   selectedTable.value = table
-  form.guests = Math.min(Math.max(table.capacity, form.guests), table.seats)
 }
 
 onMounted(() => {
@@ -603,17 +621,13 @@ const nextStep = () => {
 const submitReservation = async () => {
   reservationError.value = ''
   const authToken = token.value || (import.meta.client ? localStorage.getItem('access_token') : null)
-  if (!authToken) {
-    reservationError.value = 'Please log in before confirming a reservation.'
-    return
-  }
 
   isSubmitting.value = true
   try {
     const response = await $fetch('/reservations', {
-      baseURL: config.public.apiBase,
+      baseURL: apiBase.value,
       method: 'POST',
-      headers: { Authorization: `Bearer ${authToken}` },
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
       body: {
         date: form.date,
         time: form.time,
@@ -623,6 +637,10 @@ const submitReservation = async () => {
         email: form.email,
         phone: form.phone,
         notes: form.notes,
+        booking_type: form.bookingType,
+        area_name: selectedArea.value.name,
+        occasion: form.occasion,
+        dietary: form.dietary,
         table_id: selectedTable.value ? selectedTable.value.id : undefined,
       },
     })
@@ -641,6 +659,7 @@ const resetForm = () => {
   currentStep.value = 1
   reservationError.value = ''
   selectedTable.value = null
+  form.bookingType = 'dining'
   form.firstName = ''
   form.lastName = ''
   form.email = ''

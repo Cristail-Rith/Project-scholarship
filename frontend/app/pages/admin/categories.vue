@@ -48,7 +48,7 @@ if (homeCategoryName && categoryStationMap[homeCategoryName]) {
   selectedStationFilter.value = categoryStationMap[homeCategoryName]
 }
 
-const config = useRuntimeConfig()
+const { apiBase } = useApiBase()
 const { token } = useAuth()
 const saveError = ref('')
 const loadError = ref('')
@@ -61,7 +61,7 @@ const api = <T>(path: string, options: Record<string, any> = {}) => {
   const authToken = token.value || storedToken
 
   return $fetch<T>(path, {
-    baseURL: config.public.apiBase,
+    baseURL: apiBase.value,
     ...options,
     headers: {
       ...(options.headers || {}),
@@ -92,7 +92,7 @@ const resolveCategoryImage = (image: string) => {
   if (!image) return ''
   return image.startsWith('http') || image.startsWith('blob:')
     ? image
-    : `${config.public.apiBase}${image}`
+    : `${apiBase.value}${image}`
 }
 
 // Categories Reactive Dataset
@@ -286,7 +286,7 @@ onMounted(() => {
               class="w-64 rounded-lg border border-stone-300 bg-stone-50 px-4 py-2 pl-9 text-xs text-stone-800 placeholder-stone-400 focus:border-amber-600 focus:bg-white focus:outline-none transition-all"
             />
             <svg class="absolute left-3 top-2.5 h-4 w-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0 1 14 0z"/>
             </svg>
           </div>
 
@@ -304,6 +304,11 @@ onMounted(() => {
 
       <div class="p-6 lg:p-8 space-y-6">
 
+        <!-- Load Error -->
+        <div v-if="loadError" class="mb-4 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs">
+          {{ loadError }}
+        </div>
+
         <!-- Top Overview Stats -->
         <section class="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <div class="bg-white p-5 rounded-lg border border-stone-200 shadow-sm flex items-center justify-between">
@@ -313,7 +318,7 @@ onMounted(() => {
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
               </svg>
             </div>
           </div>
@@ -325,7 +330,7 @@ onMounted(() => {
             </div>
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 0 1 6 0z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
               </svg>
             </div>
@@ -407,10 +412,10 @@ onMounted(() => {
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 2L2 22h20L12 2zM12 6l5 10H7l5-10z"/>
                         </svg>
                         <svg v-else-if="cat.icon === 'burger'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 11a8 8 0 0116 0H4zm0 4h16m-14 3h12a2 2 0 002-2v-1H4v1a2 2 0 002 2z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 11a8 8 0 0 1 16 0H4zm0 4h16m-14 3h12a2 2 0 0 0 2-2v-1H4v1a2 2 0 0 0 2 2z"/>
                         </svg>
                         <svg v-else-if="cat.icon === 'steak'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0 0-2 4 1.5 5.5s6.5-.5 7.157 3.157z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 18.657A8 8 0 0 1 6.343 7.343S7 9 9 10c0 0-2 4 1.5 5.5s6.5-.5 7.157 3.157z"/>
                         </svg>
                         <svg v-else-if="cat.icon === 'drink'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19.5 4.5l-15 0l7.5 8.5l0 6.5l-3 0l0 2l10 0l0 -2l-3 0l0 -6.5l7.5 -8.5z"/>
@@ -419,7 +424,7 @@ onMounted(() => {
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 10h16M4 14h16M4 18h16M12 4v16"/>
                         </svg>
                         <svg v-else-if="cat.icon === 'cake'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 21v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8m16 0H4m16 0a2 2 0 002-2V9a2 2 0 00-2-2h-3a1 1 0 01-1-1V5a2 2 0 00-2-2h-2a2 2 0 00-2 2v1a1 1 0 01-1 1H4a2 2 0 00-2 2v10a2 2 0 002 2"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 21v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8m16 0H4m16 0a2 2 0 0 0 2-2V9a2 2 0 00-2-2h-3a1 1 0 01-1-1V5a2 2 0 00-2-2h-2a2 2 0 00-2 2v1a1 1 0 01-1 1H4a2 2 0 00-2 2v10a2 2 0 0 0 2 2"/>
                         </svg>
                         <svg v-else-if="cat.icon === 'salad'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v18m9-9H3"/>
@@ -480,7 +485,7 @@ onMounted(() => {
                         title="Edit Category"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                       </button>
 
@@ -490,7 +495,7 @@ onMounted(() => {
                         title="Delete Category"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
                       </button>
                     </div>
@@ -623,6 +628,10 @@ onMounted(() => {
               class="w-full rounded-lg border border-stone-300 bg-stone-50 p-2.5 text-stone-800 focus:border-amber-600 focus:bg-white focus:outline-none"
             ></textarea>
           </div>
+
+          <p v-if="saveError" class="text-xs text-rose-600 mb-2">
+            {{ saveError }}
+          </p>
 
           <div class="pt-4 border-t border-stone-200 flex items-center justify-end gap-3">
             <button 

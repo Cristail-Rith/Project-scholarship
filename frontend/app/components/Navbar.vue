@@ -153,7 +153,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="1.8"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0 1 14 0z"
               />
             </svg>
           </button>
@@ -193,7 +193,7 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="1.8"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0 1 14 0z"
                   />
                 </svg>
 
@@ -283,7 +283,7 @@
                 :src="
                   user.avatar.startsWith('http')
                     ? user.avatar
-                    : config.public.apiBase + user.avatar
+                    : apiBase + user.avatar
                 "
                 :alt="user.username"
                 class="w-8 h-8 rounded-full object-cover border border-stone-200"
@@ -320,7 +320,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="1.8"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"
                 />
               </svg>
             </button>
@@ -341,7 +341,7 @@
                 :src="
                   user.avatar.startsWith('http')
                     ? user.avatar
-                    : config.public.apiBase + user.avatar
+                    : apiBase + user.avatar
                 "
                 :alt="user.username"
                 class="w-7 h-7 rounded-full object-cover border border-stone-200"
@@ -372,7 +372,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="1.8"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"
                 />
               </svg>
             </button> -->
@@ -380,7 +380,7 @@
 
           <!-- Login -->
           <NuxtLink
-            v-if="!user"
+            v-if="!user && mounted"
             to="/login"
             class="p-1 hover:text-amber-700 transition-colors"
             aria-label="Account"
@@ -395,7 +395,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="1.8"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                d="M16 7a4 4 0 11-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
           </NuxtLink>
@@ -520,6 +520,16 @@
               CONTACT US
             </NuxtLink>
           </li>
+          <li>
+            <NuxtLink
+              @click="mobileMenuOpen = false"
+              to="/gallery"
+              class="block py-2 hover:text-amber-400"
+            >
+              GALLERY
+            </NuxtLink>
+          </li>
+
         </ul>
       </div>
     </Transition>
@@ -564,8 +574,9 @@ import { useProducts } from '~/composables/useProducts'
 import { useCart } from '~/composables/useCart'
 import { useAuth } from '~/composables/useAuth'
 
+const { apiBase } = useApiBase()
+
 const router = useRouter()
-const config = useRuntimeConfig()
 
 const { searchQuery, filteredProducts } = useProducts()
 
